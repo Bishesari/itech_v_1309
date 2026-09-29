@@ -15,7 +15,7 @@
     </flux:brand>
 
     <flux:navbar class="-mb-px max-lg:hidden">
-        <flux:navbar.item icon="home" href="#" current>Home</flux:navbar.item>
+        <flux:navbar.item icon="home" href="#" current>{{__('صفحه اول')}}</flux:navbar.item>
         <flux:navbar.item icon="inbox" badge="12" href="#" >Inbox</flux:navbar.item>
         <flux:navbar.item icon="document-text" href="#">Documents</flux:navbar.item>
         <flux:navbar.item icon="calendar" href="#">Calendar</flux:navbar.item>
