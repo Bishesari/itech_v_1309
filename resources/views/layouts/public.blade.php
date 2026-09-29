@@ -15,7 +15,7 @@
     </flux:brand>
 
     <flux:navbar class="-mb-px max-lg:hidden">
-        <flux:navbar.item icon="home" href="#" current>{{__('صفحه اول')}}</flux:navbar.item>
+        <flux:navbar.item icon="home" href="{{route('home')}}" current>{{__('صفحه اول')}}</flux:navbar.item>
         <flux:navbar.item icon="inbox" badge="12" href="#" >Inbox</flux:navbar.item>
         <flux:navbar.item icon="document-text" href="#">Documents</flux:navbar.item>
         <flux:navbar.item icon="calendar" href="#">Calendar</flux:navbar.item>
@@ -92,7 +92,7 @@
     </flux:sidebar.header>
 
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="home" href="#" current>Home</flux:sidebar.item>
+        <flux:sidebar.item icon="home" href="{{route('home')}}" current>{{__('صفحه اول')}}</flux:sidebar.item>
         <flux:sidebar.item icon="inbox" badge="12" href="#">Inbox</flux:sidebar.item>
         <flux:sidebar.item icon="document-text" href="#">Documents</flux:sidebar.item>
         <flux:sidebar.item icon="calendar" href="#">Calendar</flux:sidebar.item>
