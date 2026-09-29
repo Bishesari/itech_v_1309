@@ -6,14 +6,17 @@
 
 <body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
 <flux:header container class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
-    <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
+    <flux:sidebar.toggle class="lg:hidden cursor-pointer" icon="bars-2" inset="left" />
 
-    <flux:brand href="#" logo="https://fluxui.dev/img/demo/logo.png" name="Acme Inc." class="max-lg:hidden dark:hidden" />
-    <flux:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="Acme Inc." class="max-lg:hidden! hidden dark:flex" />
+    <flux:brand href="{{route('home')}}">
+        <x-slot name="logo" class="max-lg:size-16 size-22">
+            <x-logo class="text-zinc-700 dark:text-zinc-300 animate-pulse"/>
+        </x-slot>
+    </flux:brand>
 
     <flux:navbar class="-mb-px max-lg:hidden">
         <flux:navbar.item icon="home" href="#" current>Home</flux:navbar.item>
-        <flux:navbar.item icon="inbox" badge="12" href="#">Inbox</flux:navbar.item>
+        <flux:navbar.item icon="inbox" badge="12" href="#" >Inbox</flux:navbar.item>
         <flux:navbar.item icon="document-text" href="#">Documents</flux:navbar.item>
         <flux:navbar.item icon="calendar" href="#">Calendar</flux:navbar.item>
 
@@ -33,7 +36,30 @@
     <flux:spacer />
 
     <flux:navbar class="me-4">
-        <flux:navbar.item icon="magnifying-glass" href="#" label="Search" />
+        <flux:navbar.item icon="magnifying-glass" href="#" label="Search" lass="cursor-pointer"/>
+
+        <div x-data class="relative">
+            <flux:button
+                x-on:click="$flux.dark = ! $flux.dark" variant="subtle" square tooltip="تغییر حالت نمایش" class="cursor-pointer">
+                <div class="relative size-5">
+
+                    {{-- Sun --}}
+                    <flux:icon.sun
+                        variant="solid"
+                        class="absolute inset-0 size-5 transition-all duration-300 ease-out text-amber-500 dark:text-amber-300"
+                        x-bind:class="$flux.dark ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'"
+                    />
+
+                    {{-- Moon --}}
+                    <flux:icon.moon
+                        class="absolute inset-0 size-5 transition-all duration-300 ease-out"
+                        x-bind:class="$flux.dark ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'"
+                        variant="solid"
+                    />
+                </div>
+            </flux:button>
+        </div>
+
         <flux:navbar.item class="max-lg:hidden" icon="cog-6-tooth" href="#" label="Settings" />
         <flux:navbar.item class="max-lg:hidden" icon="information-circle" href="#" label="Help" />
     </flux:navbar>
@@ -56,12 +82,11 @@
 
 <flux:sidebar sticky collapsible="mobile" class="lg:hidden bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
     <flux:sidebar.header>
-        <flux:sidebar.brand
-            href="#"
-            logo="https://fluxui.dev/img/demo/logo.png"
-            logo:dark="https://fluxui.dev/img/demo/dark-mode-logo.png"
-            name="Acme Inc."
-        />
+        <flux:sidebar.brand href="{{route('home')}}">
+            <x-slot name="logo" class="size-16">
+                <x-logo class="text-zinc-700 dark:text-zinc-300 animate-pulse"/>
+            </x-slot>
+        </flux:sidebar.brand>
 
         <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
@@ -88,13 +113,14 @@
 </flux:sidebar>
 
 <flux:main container>
-    <flux:heading size="xl" level="1">Good afternoon, Olivia</flux:heading>
-
-    <flux:text class="mt-2 mb-6 text-base">Here's what's new today</flux:text>
-
-    <flux:separator variant="subtle" />
+    {{$slot}}
 </flux:main>
 
+@persist('toast')
+<flux:toast.group>
+    <flux:toast />
+</flux:toast.group>
+@endpersist
 @fluxScripts
 </body>
 </html>
