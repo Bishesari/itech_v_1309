@@ -1,63 +1,55 @@
 <flux:footer
-    class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900"
->
-    <div class="container mx-auto px-4 py-8">
+    class="bg-zinc-50 grid grid-cols-1 md:grid-cols-2 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700">
 
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
 
-            {{-- About --}}
-            <div>
-                <a
-                    href="{{ route('home') }}"
-                    class="inline-flex items-center"
-                    wire:navigate
-                >
-                    <x-logo class="h-12 text-zinc-700 dark:text-zinc-300" />
-                </a>
+    <div class="text-center">
+        <a href="{{ route('home') }}" class="flex flex-col items-center" wire:navigate>
+            <x-logo class="text-zinc-700 dark:text-zinc-300 h-12"/>
+        </a>
 
-                <flux:text class="mt-4 leading-7">
-                    {{ __('آموزشگاه آی‌تک؛ ارائه‌دهنده دوره‌های مهارتی و کاربردی.') }}
-                </flux:text>
-            </div>
+        <flux:text class="pt-2 tracking-tight">
+            {{__('موسس: بخشی زاده')}}
+        </flux:text>
 
-            {{-- Links --}}
-            <nav aria-label="{{ __('لینک‌های سایت') }}">
-                <flux:heading size="sm">
-                    {{ __('دسترسی سریع') }}
-                </flux:heading>
+        <flux:text class="pt-2 tracking-tight">
+            {{__('مشاوره: 8163 056 935 98+')}}
+        </flux:text>
 
-                <div class="mt-4 flex flex-col gap-2">
-                    <a
-                        href="{{ route('home') }}"
-                        wire:navigate
-                        class="text-sm text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-                    >
-                        {{ __('صفحه اصلی') }}
-                    </a>
-                </div>
-            </nav>
+        <flux:text class="pt-2 tracking-tight">
+            {{__('تلفن تماس: 50 33 10 33 77 98+')}}
+        </flux:text>
 
-            {{-- Contact --}}
-            <address class="not-italic">
-                <flux:heading size="sm">
-                    {{ __('تماس با ما') }}
-                </flux:heading>
+        <flux:text class="pt-2 tracking-tight">
+            {{__('بوشهر، خیابان سنگی، اول گلخونه، سیراف 5')}}
+        </flux:text>
+    </div>
 
-                <flux:text class="mt-4 leading-7">
-                    {{ __('بوشهر') }}
-                </flux:text>
-            </address>
+    <flux:separator class="block md:hidden my-5"/>
 
-        </div>
+    <div class="text-center">
+        <flux:text class="pt-2">
+            <span class="font-semibold">&copy;</span>
+            {{__('تمامی حقوق برای آموزشگاه آی تک محفوظ است.')}}
+            {{__('از 1388 تا')}}
+            {{jdate('Y', time(), '', '', 'en')}}
+        </flux:text>
 
-        <flux:separator class="my-6" />
+        <flux:text class="pt-3">
+            {{__('تماس: 6111 433 903 98+')}}
+            {{__(' و ')}}
+            {{__('Yasser.Bishesari@Gmail.Com')}}
+        </flux:text>
 
-        <div class="text-center">
-            <flux:text size="sm">
-                <span class="font-semibold">&copy;</span>
-                {{ __('تمامی حقوق برای آموزشگاه آی‌تک محفوظ است.') }}
-            </flux:text>
-        </div>
+        <flux:text class="pt-3 text-green-500">
+            {{__('S.V: 13.0.9 - L.V:')}}
+            {{__(Illuminate\Foundation\Application::VERSION)}}
+            {{__(' - PHP.V: '.PHP_VERSION)}}
+{{--            {{__(' - P.V: ' . $visits )}}--}}
+        </flux:text>
+
+        <flux:text class="pt-3">
+            {{__('برنامه نویسی و اجرا: بیشه سری')}}
+        </flux:text>
 
     </div>
 </flux:footer>

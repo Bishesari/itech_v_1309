@@ -4,80 +4,81 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800 antialiased">
-<flux:header container class="bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-700">
+<body class="min-h-screen bg-white dark:bg-zinc-950 antialiased">
+{{-- ========================================================= Header ========================================================== --}}
+
+<flux:header container class="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90" >
+
+    {{-- Mobile menu --}}
     <flux:sidebar.toggle class="lg:hidden cursor-pointer" icon="bars-2" inset="left" />
 
-    <flux:brand href="{{route('home')}}">
-        <x-slot name="logo" class="max-lg:size-16 size-22">
-            <x-logo class="text-zinc-700 dark:text-zinc-300 animate-pulse"/>
+    {{-- Logo --}}
+    <flux:brand href="{{ route('home') }}" wire:navigate>
+        <x-slot name="logo" class="max-lg:size-14 size-18" >
+            <x-logo class="text-zinc-800 dark:text-zinc-100 animate-pulse" />
         </x-slot>
     </flux:brand>
 
+    {{-- Desktop navigation --}}
     <flux:navbar class="-mb-px max-lg:hidden">
-        <flux:navbar.item icon="home" href="{{route('home')}}" current>{{__('صفحه اول')}}</flux:navbar.item>
-        <flux:navbar.item icon="inbox" badge="12" href="#" >Inbox</flux:navbar.item>
-        <flux:navbar.item icon="document-text" href="#">Documents</flux:navbar.item>
-        <flux:navbar.item icon="calendar" href="#">Calendar</flux:navbar.item>
-
-        <flux:separator vertical variant="subtle" class="my-2"/>
-
-        <flux:dropdown class="max-lg:hidden">
-            <flux:navbar.item icon:trailing="chevron-down">Favorites</flux:navbar.item>
-
-            <flux:navmenu>
-                <flux:navmenu.item href="#">Marketing site</flux:navmenu.item>
-                <flux:navmenu.item href="#">Android app</flux:navmenu.item>
-                <flux:navmenu.item href="#">Brand guidelines</flux:navmenu.item>
-            </flux:navmenu>
-        </flux:dropdown>
+        <flux:navbar.item icon="home" :href="route('home')" :current="request()->routeIs('home')" wire:navigate >
+            {{ __('صفحه اصلی') }}
+        </flux:navbar.item>
+        <flux:navbar.item icon="academic-cap" href="#categories" > {{ __('دوره‌ها') }} </flux:navbar.item>
+        <flux:navbar.item icon="information-circle" href="#about" > {{ __('درباره ما') }} </flux:navbar.item>
+        <flux:navbar.item icon="question-mark-circle" href="#faq" > {{ __('سوالات متداول') }} </flux:navbar.item>
     </flux:navbar>
 
     <flux:spacer />
 
+    {{-- Header actions --}}
     <flux:navbar class="me-4">
-        <flux:navbar.item icon="magnifying-glass" href="#" label="Search" lass="cursor-pointer"/>
-
+        {{-- Dark mode --}}
         <div x-data class="relative">
-            <flux:button
-                x-on:click="$flux.dark = ! $flux.dark" variant="subtle" square tooltip="تغییر حالت نمایش" class="cursor-pointer">
+            <flux:navbar.item
+                x-on:click="$flux.dark = ! $flux.dark" variant="subtle" square tooltip="{{ __('تغییر حالت نمایش') }}" class="cursor-pointer" >
                 <div class="relative size-5">
-
                     {{-- Sun --}}
-                    <flux:icon.sun
-                        variant="solid"
-                        class="absolute inset-0 size-5 transition-all duration-300 ease-out text-amber-500 dark:text-amber-300"
-                        x-bind:class="$flux.dark ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'"
-                    />
-
+                    <flux:icon.sun variant="solid" class="absolute inset-0 size-5 transition-all duration-300 ease-out text-amber-500 dark:text-amber-300"
+                                   x-bind:class="$flux.dark ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'" />
                     {{-- Moon --}}
-                    <flux:icon.moon
-                        class="absolute inset-0 size-5 transition-all duration-300 ease-out"
-                        x-bind:class="$flux.dark ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'"
-                        variant="solid"
-                    />
+                    <flux:icon.moon variant="solid" class="absolute inset-0 size-5 transition-all duration-300 ease-out"
+                                    x-bind:class="$flux.dark ? '-rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'" />
                 </div>
-            </flux:button>
+            </flux:navbar.item>
         </div>
-
-        <flux:navbar.item class="max-lg:hidden" icon="cog-6-tooth" href="#" label="Settings" />
-        <flux:navbar.item class="max-lg:hidden" icon="information-circle" href="#" label="Help" />
     </flux:navbar>
 
-    <flux:dropdown position="top" align="start">
-        <flux:profile avatar="https://fluxui.dev/img/demo/user.png" />
-
-        <flux:menu>
-            <flux:menu.radio.group>
-                <flux:menu.radio checked>Olivia Martin</flux:menu.radio>
-                <flux:menu.radio>Truly Delta</flux:menu.radio>
-            </flux:menu.radio.group>
-
-            <flux:menu.separator />
-
-            <flux:menu.item icon="arrow-right-start-on-rectangle">Logout</flux:menu.item>
-        </flux:menu>
-    </flux:dropdown>
+    {{-- Authentication --}}
+    @auth
+        <flux:dropdown position="top" align="start" >
+            @php $person = auth()->user()->person; @endphp
+            <flux:profile :name="$person?->fullName()" :initials="$person?->initials()" />
+            <flux:menu>
+                <flux:menu.item href="{{ route('dashboard') }}" icon="computer-desktop" wire:navigate >
+                    {{ __('داشبورد') }}
+                </flux:menu.item>
+                <flux:menu.separator />
+                <form method="POST" action="{{ route('logout') }}" class="w-full" >
+                    @csrf
+                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full" >
+                        {{ __('خروج') }}
+                    </flux:menu.item>
+                </form>
+            </flux:menu>
+        </flux:dropdown>
+    @else
+        @if (Route::has('login'))
+            <flux:button href="{{ route('login') }}" size="sm" variant="subtle" wire:navigate >
+                {{ __('ورود') }}
+            </flux:button>
+        @endif
+            @if (Route::has('register'))
+                <flux:button href="{{ route('register') }}" size="sm" variant="primary" wire:navigate class="mr-1">
+                    {{ __('ثبت نام') }}
+                </flux:button>
+            @endif
+    @endauth
 </flux:header>
 
 <flux:sidebar sticky collapsible="mobile" class="lg:hidden bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
@@ -115,6 +116,7 @@
 <flux:main container>
     {{$slot}}
 </flux:main>
+@include('partials.foot')
 
 @persist('toast')
 <flux:toast.group>
