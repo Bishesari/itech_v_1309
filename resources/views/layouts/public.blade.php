@@ -7,7 +7,7 @@
 <body class="min-h-screen bg-white dark:bg-zinc-950 antialiased">
 {{-- ========================================================= Header ========================================================== --}}
 
-<flux:header container class="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90" >
+<flux:header container sticky class="border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/90" >
 
     {{-- Mobile menu --}}
     <flux:sidebar.toggle class="lg:hidden cursor-pointer" icon="bars-2" inset="left" />
@@ -81,35 +81,36 @@
     @endauth
 </flux:header>
 
-<flux:sidebar sticky collapsible="mobile" class="lg:hidden bg-zinc-50 dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-700">
+{{-- ========================================================= Mobile Sidebar ========================================================== --}}
+<flux:sidebar sticky collapsible="mobile" class="lg:hidden border-r border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950" >
     <flux:sidebar.header>
-        <flux:sidebar.brand href="{{route('home')}}">
-            <x-slot name="logo" class="size-16">
-                <x-logo class="text-zinc-700 dark:text-zinc-300 animate-pulse"/>
+        <flux:sidebar.brand href="{{ route('home') }}">
+            <x-slot name="logo" class="size-14" >
+                <x-logo class="text-zinc-800 dark:text-zinc-100 animate-pulse" />
             </x-slot>
         </flux:sidebar.brand>
+        <flux:sidebar.collapse />
+{{--        <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />--}}
 
-        <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
     </flux:sidebar.header>
-
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="home" href="{{route('home')}}" current>{{__('صفحه اول')}}</flux:sidebar.item>
-        <flux:sidebar.item icon="inbox" badge="12" href="#">Inbox</flux:sidebar.item>
-        <flux:sidebar.item icon="document-text" href="#">Documents</flux:sidebar.item>
-        <flux:sidebar.item icon="calendar" href="#">Calendar</flux:sidebar.item>
-
-        <flux:sidebar.group expandable heading="Favorites" class="grid">
-            <flux:sidebar.item href="#">Marketing site</flux:sidebar.item>
-            <flux:sidebar.item href="#">Android app</flux:sidebar.item>
-            <flux:sidebar.item href="#">Brand guidelines</flux:sidebar.item>
-        </flux:sidebar.group>
+        <flux:sidebar.item icon="home" href="{{ route('home') }}" :current="request()->routeIs('home')" wire:navigate > {{ __('صفحه اصلی') }} </flux:sidebar.item>
+        <flux:sidebar.item icon="academic-cap" href="#categories" > {{ __('دوره‌ها') }} </flux:sidebar.item>
+        <flux:sidebar.item icon="information-circle" href="#about" > {{ __('درباره ما') }} </flux:sidebar.item>
+        <flux:sidebar.item icon="question-mark-circle" href="#faq" > {{ __('سوالات متداول') }} </flux:sidebar.item>
     </flux:sidebar.nav>
-
     <flux:sidebar.spacer />
-
     <flux:sidebar.nav>
-        <flux:sidebar.item icon="cog-6-tooth" href="#">Settings</flux:sidebar.item>
-        <flux:sidebar.item icon="information-circle" href="#">Help</flux:sidebar.item>
+        @auth
+            <flux:sidebar.item icon="computer-desktop" href="{{ route('dashboard') }}" wire:navigate > {{ __('داشبورد') }} </flux:sidebar.item>
+        @else
+            @if (Route::has('login'))
+                <flux:sidebar.item icon="arrow-right-end-on-rectangle" href="{{ route('login') }}" wire:navigate > {{ __('ورود') }} </flux:sidebar.item>
+            @endif
+                @if (Route::has('register'))
+                    <flux:sidebar.item icon="user-plus" href="{{ route('register') }}" wire:navigate > {{ __('ثبت نام') }} </flux:sidebar.item>
+                @endif
+        @endauth
     </flux:sidebar.nav>
 </flux:sidebar>
 

@@ -37,47 +37,184 @@
                     </div>
                 </div>
                 {{-- Hero visual --}}
-                <div class="relative hidden min-h-[460px] lg:block">
-                    <div class="absolute inset-10 rounded-[3rem] bg-zinc-100 dark:bg-zinc-900"></div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="relative size-80">
+                <div class="relative hidden min-h-[500px] lg:block">
 
-                            {{-- Main circle --}}
+                    {{-- Background panel --}}
+                    <div
+                        class="absolute inset-8 rounded-[3rem] bg-zinc-100/80 dark:bg-zinc-900"
+                    ></div>
+
+                    <div class="absolute inset-0 flex items-center justify-center">
+
+                        <div class="relative size-[400px]">
+
+                            {{-- Main circles --}}
                             <div class="absolute inset-0 rounded-full border border-zinc-200 dark:border-zinc-700"></div>
-                            <div class="absolute inset-8 rounded-full border border-dashed border-zinc-300 dark:border-zinc-600"></div>
+
+                            <div
+                                class="absolute inset-8 rounded-full border border-dashed border-zinc-300 dark:border-zinc-600"
+                            ></div>
+
+                            <div
+                                class="absolute inset-16 rounded-full border border-zinc-200/70 dark:border-zinc-700/70"
+                            ></div>
+
 
                             {{-- Center --}}
-                            <div class="absolute inset-24 flex items-center justify-center rounded-3xl bg-white shadow-xl dark:bg-zinc-800">
+                            <div
+                                class="absolute inset-[110px] flex items-center justify-center rounded-[2rem] bg-white shadow-xl dark:bg-zinc-800"
+                            >
                                 <x-logo class="size-24 text-zinc-800 dark:text-zinc-100" />
                             </div>
 
-                            {{-- Floating cards --}}
-                            <div class="absolute -right-8 top-10 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+
+                            {{-- =================================================
+                                 Computer
+                            ================================================== --}}
+                            <div
+                                class="absolute -right-16 top-8 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
                                 <div class="flex items-center gap-3">
-                                    <div class="flex size-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700">
-                                        <flux:icon name="computer-desktop" variant="micro" /> </div>
-                                    <div> <div class="text-sm font-semibold"> {{ __('کامپیوتر') }} </div>
-                                        <div class="text-xs text-zinc-500"> {{ __('مهارت کاربردی') }} </div>
+
+                                    <div
+                                        class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700"
+                                    >
+                                        <flux:icon
+                                            name="computer-desktop"
+                                            variant="micro"
+                                        />
                                     </div>
-                                </div>
-                            </div>
-                            <div class="absolute -bottom-2 -left-10 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-                                <div class="flex items-center gap-3">
-                                    <div class="flex size-10 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700">
-                                        <flux:icon name="code-bracket" variant="micro" /> </div>
+
                                     <div>
-                                        <div class="text-sm font-semibold"> {{ __('برنامه‌نویسی') }} </div>
-                                        <div class="text-xs text-zinc-500"> {{ __('مسیر یادگیری') }} </div>
+                                        <div class="text-sm font-semibold">
+                                            {{ __('کامپیوتر') }}
+                                        </div>
+
+                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                            {{ __('مهارت کاربردی') }}
+                                        </div>
                                     </div>
+
                                 </div>
                             </div>
-                            <div class="absolute -left-4 top-32 flex size-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-                                <flux:icon name="light-bulb" /> </div>
-                            <div class="absolute -right-2 bottom-24 flex size-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+
+
+                            {{-- =================================================
+                                 Photography
+                            ================================================== --}}
+                            <div
+                                class="absolute -left-20 top-24 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <div class="flex items-center gap-3">
+
+                                    <div
+                                        class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700"
+                                    >
+                                        <flux:icon
+                                            name="camera"
+                                            variant="micro"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div class="text-sm font-semibold">
+                                            {{ __('عکاسی') }}
+                                        </div>
+
+                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                            {{ __('هنر و مهارت') }}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            {{-- =================================================
+                                 Programming
+                            ================================================== --}}
+                            <div
+                                class="absolute -bottom-4 -right-14 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <div class="flex items-center gap-3">
+
+                                    <div
+                                        class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700"
+                                    >
+                                        <flux:icon
+                                            name="code-bracket"
+                                            variant="micro"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div class="text-sm font-semibold">
+                                            {{ __('برنامه‌نویسی') }}
+                                        </div>
+
+                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                            {{ __('مسیر یادگیری') }}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            {{-- =================================================
+                                Architecture
+                            ================================================== --}}
+                            <div
+                                class="absolute -bottom-10 -left-14 rounded-2xl border border-zinc-200 bg-white p-4 shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <div class="flex items-center gap-3">
+
+                                    <div
+                                        class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700"
+                                    >
+                                        <flux:icon
+                                            name="building-office-2"
+                                            variant="micro"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div class="text-sm font-semibold">
+                                            {{ __('معماری') }}
+                                        </div>
+
+                                        <div class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                            {{ __('طراحی و نرم‌افزار') }}
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                            {{-- =================================================
+                                 Light Bulb
+                            ================================================== --}}
+                            <div
+                                class="absolute -left-2 top-4 flex size-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
+                                <flux:icon name="light-bulb" />
+                            </div>
+
+
+                            {{-- =================================================
+                                 Education
+                            ================================================== --}}
+                            <div
+                                class="absolute -right-2 bottom-28 flex size-14 items-center justify-center rounded-2xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800"
+                            >
                                 <flux:icon name="academic-cap" />
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
             </div>
         </div>
