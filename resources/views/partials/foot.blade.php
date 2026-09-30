@@ -1,7 +1,5 @@
-<flux:footer
-    class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900"
->
-    <div class="mx-auto w-full max-w-7xl px-6 py-10 lg:px-8">
+<flux:footer class="border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
+    <div class="mx-auto w-full max-w-7xl px-6 py-1 lg:px-8">
 
         <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
 
