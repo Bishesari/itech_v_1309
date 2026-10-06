@@ -277,6 +277,8 @@ class extends Component
 
         Auth::login($user);
 
+        request()->session()->regenerate();
+
         $this->modal('verify-otp')->close();
 
         $this->redirectRoute('dashboard');
