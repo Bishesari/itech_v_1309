@@ -162,6 +162,7 @@ final class VerificationChallengeService
     ): ?VerificationChallenge {
         return VerificationChallenge::query()
             ->active()
+            ->whereNotNull('sms_sent_at')
             ->where('purpose', $purpose)
             ->where('mobile', $mobile)
             ->latest('id')
