@@ -17,11 +17,9 @@ class ParsGreenSmsGateway implements SmsGateway
                     'authorization' => 'BASIC APIKEY:'.config('services.pars_green.api_key'),
                     'Content-Type' => 'application/json;charset=utf-8',
                 ])
-                ->post('/Apiv2/Message/SendOtp', [
-                    'Mobile' => $mobile,
-                    'SmsCode' => $verificationCode,
-                    'TemplateId' => config('services.pars_green.otp_template_id'),
-                    'AddName' => false,
+                ->post('/Apiv2/Message/SendSms', [
+                    'SmsBody' => "آی‌تک، کد تأیید ثبت‌نام شما: {$verificationCode}",
+                    'Mobiles' => [$mobile],
                 ]);
 
             $result = $response->json();

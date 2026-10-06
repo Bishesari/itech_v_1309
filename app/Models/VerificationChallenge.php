@@ -1,5 +1,5 @@
 <?php
-
+declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\NationalityType;
@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class VerificationChallenge extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'first_name_fa',
         'last_name_fa',

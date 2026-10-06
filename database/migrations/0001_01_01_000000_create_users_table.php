@@ -22,12 +22,12 @@ return new class extends Migration
             $table->string('password');
 
             // Account
-//            $table->tinyInteger('status')
-//                ->default(UserStatus::Active->value)
-//                ->comment('0: Inactive, 1: Active, 2: Suspended');
+            //            $table->tinyInteger('status')
+            //                ->default(UserStatus::Active->value)
+            //                ->comment('0: Inactive, 1: Active, 2: Suspended');
 
             // Login
-//            $table->timestamp('last_login_at')->nullable();
+            //            $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
 
             // Audit

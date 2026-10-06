@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exceptions\Verification;
 
 use Throwable;
 
-class SmsDeliveryException extends VerificationException
+final class SmsDeliveryException extends VerificationException
 {
     public function __construct(
         string $message = 'ارسال پیامک با خطا مواجه شد.',

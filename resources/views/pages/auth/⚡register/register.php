@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\NationalityType;
 use App\Enums\VerificationPurpose;
 use App\Exceptions\Verification\ActiveVerificationChallengeException;
 use App\Exceptions\Verification\ExpiredVerificationChallengeException;
 use App\Exceptions\Verification\InvalidVerificationCodeException;
 use App\Exceptions\Verification\SmsDeliveryException;
+use App\Exceptions\Verification\SmsRateLimitException;
 use App\Exceptions\Verification\VerificationAttemptsExceededException;
 use App\Exceptions\Verification\VerificationChallengeNotFoundException;
 use App\Rules\NationalCode;
@@ -15,6 +18,7 @@ use App\Services\Registration\RegistrationService;
 use App\Services\Verification\VerificationChallengeService;
 use App\Support\Digits;
 use App\Support\PersianText;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -36,6 +40,7 @@ class extends Component
     public string $mobile = '';
 
     public string $otp = '';
+
     public ?string $otp_expires_at = null;
 
     public ?string $fingerprint = null;
@@ -131,8 +136,8 @@ class extends Component
     public function continueRegister(
         VerificationChallengeService $service
     ): void {
-
         $this->normalizeAll();
+
         $this->validate();
 
         try {
@@ -146,6 +151,13 @@ class extends Component
                 fingerprint: $this->fingerprint,
                 ip: request()->ip(),
             );
+        } catch (SmsRateLimitException) {
+            $this->addError(
+                'verification',
+                'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.'
+            );
+
+            return;
         } catch (SmsDeliveryException) {
             $this->addError(
                 'verification',
@@ -156,6 +168,7 @@ class extends Component
         }
 
         $this->otp = '';
+
         $this->otp_expires_at = $challenge->expires_at->toISOString();
 
         $this->modal('verify-otp')->show();
@@ -176,25 +189,35 @@ class extends Component
                 'otp',
                 'کد تأیید معتبر یا فعالی برای این شماره وجود ندارد. لطفاً کد جدید درخواست کنید.'
             );
-            return;
 
+            return;
         } catch (ActiveVerificationChallengeException) {
             $this->addError(
                 'otp',
                 'کد تأیید فعلی هنوز معتبر است.'
             );
+
+            return;
+        } catch (SmsRateLimitException) {
+            $this->addError(
+                'otp',
+                'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.'
+            );
+
             return;
         } catch (SmsDeliveryException) {
             $this->addError(
                 'otp',
                 'ارسال مجدد کد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.'
             );
+
             return;
         }
 
         $this->resetErrorBag('otp');
 
         $this->otp = '';
+
         $this->otp_expires_at = $challenge->expires_at->toISOString();
     }
 
@@ -246,15 +269,16 @@ class extends Component
             return;
         }
 
-
         $this->resetErrorBag('otp');
+
         $this->otp = '';
+
         $this->otp_expires_at = null;
 
         Auth::login($user);
+
         $this->modal('verify-otp')->close();
 
         $this->redirectRoute('dashboard');
-        // مرحله ثبت نهایی کاربر بعداً اینجا قرار می‌گیرد.
     }
 };

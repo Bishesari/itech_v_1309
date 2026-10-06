@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Exceptions\Verification;
 
 use RuntimeException;
 
-class InvalidVerificationCodeException extends RuntimeException
+final class InvalidVerificationCodeException extends RuntimeException
 {
     public function __construct()
     {

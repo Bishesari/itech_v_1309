@@ -16,7 +16,7 @@ use App\Models\VerificationChallenge;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
-class VerificationChallengeService
+final class VerificationChallengeService
 {
     /**
      * Get the active challenge or create a new one.

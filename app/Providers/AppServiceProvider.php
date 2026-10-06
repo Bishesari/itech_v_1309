@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Contracts\SmsGateway;
+use App\Services\Sms\FakeSmsGateway;
+use App\Services\Sms\SmsIrSmsGateway;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +18,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            SmsGateway::class,
+            app()->environment('testing')
+                ? FakeSmsGateway::class
+                : SmsIrSmsGateway::class,
+        );
     }
 
     /**

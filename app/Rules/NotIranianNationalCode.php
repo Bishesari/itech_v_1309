@@ -12,16 +12,18 @@ final class NotIranianNationalCode implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (! is_string($value)) {
-            return; // قانون string خودش گزارش می‌دهد
+            return;
         }
 
-        // فقط ورودی دقیقاً ۱۰ رقمی می‌تواند کد ملی باشد؛ بقیه اصلاً بررسی نمی‌شوند
+        // فقط ورودی دقیقاً ۱۰ رقمی می‌تواند کد ملی باشد.
         if (strlen($value) !== 10 || ! ctype_digit($value)) {
             return;
         }
 
         if (NationalCode::isValid($value)) {
-            $fail('این شماره یک کد ملی ایرانی است. اگر تابعیت شما ایرانی است، نوع تابعیت را اصلاح کنید.');
+            $fail(
+                'این شماره یک کد ملی ایرانی است. اگر تابعیت شما ایرانی است، نوع تابعیت را اصلاح کنید.'
+            );
         }
     }
 }
