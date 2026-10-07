@@ -45,7 +45,7 @@ class extends Component
         if (! $user) {
             $this->addError(
                 'identity',
-                'کد ملی یافت نشد.',
+                'شناسه یافت نشد.',
             );
 
             return;
@@ -56,7 +56,7 @@ class extends Component
         if ($mobiles->isEmpty()) {
             $this->addError(
                 'identity',
-                'هیچ شماره موبایلی برای این کد ملی ثبت نشده است.',
+                'هیچ شماره موبایلی برای این شناسه ثبت نشده است.',
             );
 
             return;

@@ -1,5 +1,4 @@
 <div class="flex flex-col gap-6 pb-5">
-
     {{-- Header --}}
 
     <div class="mb-1 text-center">
@@ -75,22 +74,15 @@
             @if (count($mobiles) > 1 && ! $timer)
 
                 <flux:field>
-                    <flux:label>
-                        شماره موبایل
-                    </flux:label>
+                    <flux:label>{{__('شماره موبایل')}}</flux:label>
 
-                    <flux:radio.group
-                        wire:model="selectedMobileId"
-                        variant="cards"
-                    >
-                        @foreach ($mobiles as $mobile)
-                            <flux:radio
-                                value="{{ $mobile['id'] }}"
-                                label="{{ $mobile['mobile'] }}"
-                            />
+                    <flux:select wire:model="selectedMobileId" variant="listbox" placeholder="انتخاب موبایل" clearable>
+                        @foreach($mobiles as $mobile)
+                            <flux:select.option value="{{ $mobile['id'] }}">
+                                {{ \App\Support\MobileFormatter::mask($mobile['mobile']) }}
+                            </flux:select.option>
                         @endforeach
-                    </flux:radio.group>
-
+                    </flux:select>
                     <flux:error name="selectedMobileId" />
                 </flux:field>
 
@@ -106,17 +98,17 @@
                 <flux:button
                     type="button"
                     variant="primary"
-                    class="w-full"
+                    class="w-full cursor-pointer"
                     wire:click="selectMobile"
                     wire:loading.attr="disabled"
                     wire:target="selectMobile"
+                    :loading="false"
                 >
-                    <span wire:loading.remove wire:target="selectMobile">
-                        ارسال کد تأیید
-                    </span>
+                    <span wire:loading.remove wire:target="selectMobile">{{__('ارسال کد تأیید')}}</span>
 
                     <span wire:loading wire:target="selectMobile">
-                        در حال ارسال...
+                        {{__('در حال پردازش...')}}
+                        <flux:icon.loading class="size-4 inline" />
                     </span>
                 </flux:button>
 
@@ -131,12 +123,10 @@
 
                     @if ($selectedMobile)
                         <div class="text-center">
-                            <flux:text>
-                                کد تأیید به شماره زیر ارسال شد:
-                            </flux:text>
+                            <flux:text>{{__('کد تأیید به شماره زیر ارسال شد:')}}</flux:text>
 
                             <flux:heading class="mt-1">
-                                {{ $selectedMobile['mobile'] }}
+                                {{ \App\Support\MobileFormatter::mask($selectedMobile['mobile'] ) }}
                             </flux:heading>
                         </div>
                     @endif
@@ -144,14 +134,9 @@
 
 
                 {{-- OTP --}}
-                <form
-                    wire:submit="verifyOtp"
-                    class="space-y-6"
-                >
+                <form wire:submit="verifyOtp" class="space-y-6">
                     <flux:field>
-                        <flux:label class="text-center">
-                            کد تأیید
-                        </flux:label>
+                        <flux:label class="text-center">{{__('کد تأیید')}}</flux:label>
 
                         <flux:otp
                             wire:model="otp"
@@ -221,18 +206,13 @@
                         </template>
 
                         <template x-if="timer <= 0">
-                            <flux:text>
-                                کد تأیید منقضی شده است.
-                            </flux:text>
+                            <flux:text>{{__('کد تأیید منقضی شده است.')}}</flux:text>
                         </template>
                     </div>
 
 
                     @if ($errorMessage)
-                        <flux:callout
-                            variant="danger"
-                            icon="exclamation-triangle"
-                        >
+                        <flux:callout variant="danger" icon="exclamation-triangle">
                             {{ $errorMessage }}
                         </flux:callout>
                     @endif
@@ -241,16 +221,15 @@
                     <flux:button
                         type="submit"
                         variant="primary"
-                        class="w-full"
+                        class="w-full cursor-pointer"
                         wire:loading.attr="disabled"
                         wire:target="verifyOtp"
+                        :loading="false"
                     >
-                        <span wire:loading.remove wire:target="verifyOtp">
-                            تأیید و بازیابی کلمه عبور
-                        </span>
-
+                        <span wire:loading.remove wire:target="verifyOtp">{{__('تأیید و بازیابی کلمه عبور')}}</span>
                         <span wire:loading wire:target="verifyOtp">
-                            در حال بررسی...
+                            {{__('در حال بررسی...')}}
+                            <flux:icon.loading class="size-4 inline" />
                         </span>
                     </flux:button>
 
