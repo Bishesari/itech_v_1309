@@ -39,11 +39,29 @@ return [
         'api_key' => env('PARSGREEN_API_KEY'),
         'otp_template_id' => (int) env('PARSGREEN_OTP_TEMPLATE_ID', 2),
     ],
+
     'sms_ir' => [
         'url' => env('SMS_IR_URL', 'https://api.sms.ir/v1'),
         'api_key' => env('SMS_IR_API_KEY'),
+
         'otp_template_id' => env('SMS_IR_OTP_TEMPLATE_ID'),
-        'otp_parameter_name' => env('SMS_IR_OTP_PARAMETER_NAME', 'Code'),
+        'otp_parameter_name' => env(
+            'SMS_IR_OTP_PARAMETER_NAME',
+            'Code'
+        ),
+
+        'password_template_id' => env(
+            'SMS_IR_PASSWORD_TEMPLATE_ID'
+        ),
+        'password_username_parameter_name' => env(
+            'SMS_IR_PASSWORD_USERNAME_PARAMETER_NAME',
+            'USERNAME'
+        ),
+        'password_parameter_name' => env(
+            'SMS_IR_PASSWORD_PARAMETER_NAME',
+            'PASSWORD'
+        ),
+
         'line_number' => env('SMS_IR_LINE_NUMBER'),
     ],
 

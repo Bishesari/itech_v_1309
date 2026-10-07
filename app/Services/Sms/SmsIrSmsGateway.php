@@ -69,10 +69,65 @@ final class SmsIrSmsGateway implements SmsGateway
 
     public function sendPassword(
         string $mobile,
+        string $username,
         string $password,
     ): void {
-        throw new SmsDeliveryException(
-            'ارسال پیامک کلمه عبور هنوز برای SMS.ir پیاده‌سازی نشده است.'
-        );
+        $templateId = config('services.sms_ir.password_template_id');
+
+        if (! $templateId) {
+            throw new SmsDeliveryException(
+                'شناسه قالب پیامک کلمه عبور تنظیم نشده است.'
+            );
+        }
+
+        try {
+            $response = Http::baseUrl(
+                config('services.sms_ir.url')
+            )
+                ->withHeaders([
+                    'X-API-KEY' => config('services.sms_ir.api_key'),
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->post('/send/verify', [
+                    'mobile' => $mobile,
+                    'templateId' => (int) $templateId,
+                    'parameters' => [
+                        [
+                            'name' => config(
+                                'services.sms_ir.password_username_parameter_name',
+                                'USERNAME'
+                            ),
+                            'value' => $username,
+                        ],
+                        [
+                            'name' => config(
+                                'services.sms_ir.password_parameter_name',
+                                'PASSWORD'
+                            ),
+                            'value' => $password,
+                        ],
+                    ],
+                ]);
+
+            $result = $response->json();
+
+            if (
+                ! $response->successful()
+                || ($result['status'] ?? 0) !== 1
+            ) {
+                throw new SmsDeliveryException(
+                    $result['message']
+                    ?? 'ارسال پیامک کلمه عبور با خطا مواجه شد.'
+                );
+            }
+        } catch (SmsDeliveryException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw new SmsDeliveryException(
+                'ارتباط با سرویس پیامک برقرار نشد.',
+                previous: $e,
+            );
+        }
     }
 }

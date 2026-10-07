@@ -31,8 +31,8 @@
                 <flux:input name="password" type="password" inputmode="text" required viewable
                             input:class="text-center py-6 font-semibold text-base!" maxlength="30" dir="ltr"
                 />
-                @if (Route::has('password.request'))
-                    <flux:link class="absolute top-0 text-sm inset-e-0" :href="route('password.request')" wire:navigate>
+                @if (Route::has('forgot-password'))
+                    <flux:link class="absolute top-0 text-sm inset-e-0" :href="route('forgot-password')" wire:navigate>
                         {{ __('بازیابی کلمه عبور') }}
                     </flux:link>
                 @endif

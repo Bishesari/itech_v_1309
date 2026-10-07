@@ -55,7 +55,7 @@
 
             <flux:error
                 name="first_name_fa"
-                class="-mt-2! text-xs font-light!"
+                class="-mt-1! text-xs font-light!"
             />
         </flux:field>
 
@@ -79,7 +79,7 @@
 
             <flux:error
                 name="last_name_fa"
-                class="-mt-2! text-xs font-light!"
+                class="-mt-1! text-xs font-light!"
             />
         </flux:field>
 
@@ -121,7 +121,7 @@
 
             <flux:error
                 name="identity"
-                class="-mt-2! text-xs font-light!"
+                class="-mt-1! text-xs font-light!"
             />
         </flux:field>
 
@@ -146,7 +146,7 @@
 
             <flux:error
                 name="mobile"
-                class="-mt-2! text-xs font-light!"
+                class="-mt-1! text-xs font-light!"
             />
         </flux:field>
 

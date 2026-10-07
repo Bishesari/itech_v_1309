@@ -85,6 +85,8 @@ final class VerificationChallengeService
         ?string $fingerprint = null,
         ?string $ip = null,
     ): VerificationChallenge {
+        $this->ensureResendCooldown($purpose, $mobile);
+
         $challenge = DB::transaction(function () use (
             $purpose,
             $mobile,
@@ -97,15 +99,11 @@ final class VerificationChallengeService
                 throw new VerificationChallengeNotFoundException;
             }
 
-            if ($current->expires_at->isFuture()) {
-                throw new ActiveVerificationChallengeException;
-            }
-
             $this->ensureCanSendSms($purpose, $mobile);
             $this->ensureCanSendByFingerprint($purpose, $fingerprint);
             $this->ensureCanSendByIp($purpose, $ip);
 
-            $challenge = $this->createChallenge(
+            return $this->createChallenge(
                 purpose: $current->purpose,
                 firstNameFa: $current->first_name_fa,
                 lastNameFa: $current->last_name_fa,
@@ -115,9 +113,8 @@ final class VerificationChallengeService
                 fingerprint: $fingerprint,
                 ip: $ip,
             );
-
-            return $challenge;
         });
+
         $this->dispatchSms($challenge);
 
         return $challenge;
@@ -332,6 +329,44 @@ final class VerificationChallengeService
 
         if ($count >= config('verification.otp.ip_max_sends')) {
             throw new SmsRateLimitException;
+        }
+    }
+    public function resendAvailableAt(
+        VerificationPurpose $purpose,
+        string $mobile,
+    ): ?CarbonInterface {
+        $challenge = VerificationChallenge::query()
+            ->where('purpose', $purpose)
+            ->where('mobile', $mobile)
+            ->whereNotNull('sms_sent_at')
+            ->latest('id')
+            ->first();
+
+        if (! $challenge?->sms_sent_at) {
+            return null;
+        }
+
+        $availableAt = $challenge->sms_sent_at
+            ->copy()
+            ->addMinutes(
+                config('verification.otp.resend_cooldown')
+            );
+
+        return $availableAt->isFuture()
+            ? $availableAt
+            : null;
+    }
+    private function ensureResendCooldown(
+        VerificationPurpose $purpose,
+        string $mobile,
+    ): void {
+        $availableAt = $this->resendAvailableAt(
+            purpose: $purpose,
+            mobile: $mobile,
+        );
+
+        if ($availableAt?->isFuture()) {
+            throw new ActiveVerificationChallengeException;
         }
     }
 }

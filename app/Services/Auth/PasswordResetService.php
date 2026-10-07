@@ -1,18 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services\Auth;
 
 use App\Contracts\SmsGateway;
+use App\Enums\VerificationPurpose;
 use App\Models\Mobile;
 use App\Models\User;
+use App\Services\Verification\VerificationChallengeService;
+use App\Support\PasswordGenerator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
-class PasswordResetService
+final class PasswordResetService
 {
     public function __construct(
         protected SmsGateway $smsGateway,
-    ) {
-    }
+        protected VerificationChallengeService $verificationChallengeService,
+    ) {}
 
     public function findByIdentity(string $identity): ?User
     {
@@ -29,53 +36,75 @@ class PasswordResetService
         return $user->person->mobiles;
     }
 
-    public function reset(User $user, Mobile $mobile): void
-    {
+    public function issueVerification(
+        User $user,
+        Mobile $mobile,
+    ) {
         $this->ensureMobileBelongsToUser($user, $mobile);
 
-        $password = $this->generatePassword();
+        $person = $user->person;
 
-        $this->smsGateway->sendPassword(
-            $mobile->mobile,
-            $password,
+        return $this->verificationChallengeService->issue(
+            purpose: VerificationPurpose::PasswordReset,
+            firstNameFa: $person->first_name_fa,
+            lastNameFa: $person->last_name_fa,
+            nationalityType: $person->nationality_type,
+            identity: $person->identity,
+            mobile: $mobile->mobile,
+        );
+    }
+
+    public function reset(
+        User $user,
+        Mobile $mobile,
+        string $verificationCode,
+    ): void {
+        $this->ensureMobileBelongsToUser($user, $mobile);
+
+        $challenge = $this->verificationChallengeService->verify(
+            purpose: VerificationPurpose::PasswordReset,
+            mobile: $mobile->mobile,
+            verificationCode: $verificationCode,
         );
 
-        $user->update([
-            'password' => $password,
-        ]);
+        $password = PasswordGenerator::generate();
+
+        /*
+         * اول پیامک ارسال می‌شود.
+         * در صورت شکست ارسال، کلمه عبور قبلی همچنان معتبر است.
+         */
+        $this->smsGateway->sendPassword(
+            mobile: $mobile->mobile,
+            username: $user->username,
+            password: $password,
+        );
+
+        DB::transaction(function () use (
+            $user,
+            $password,
+            $challenge,
+        ): void {
+            $user->update([
+                'password' => $password,
+            ]);
+
+            $challenge->update([
+                'verified_at' => now(),
+            ]);
+        });
     }
 
-    protected function generatePassword(int $length = 6): string
-    {
-        $digits = '123456789';
-        $letters = 'abcdefghijkmnpqrstuvwxyz';
-
-        $password = '';
-
-        for ($i = 0; $i < 2; $i++) {
-            $password .= $digits[random_int(0, strlen($digits) - 1)];
-        }
-
-        for ($i = 0; $i < $length - 4; $i++) {
-            $password .= $letters[random_int(0, strlen($letters) - 1)];
-        }
-
-        for ($i = 0; $i < 2; $i++) {
-            $password .= $digits[random_int(0, strlen($digits) - 1)];
-        }
-
-        return $password;
-    }
-
-    protected function ensureMobileBelongsToUser(User $user, Mobile $mobile): void
-    {
+    protected function ensureMobileBelongsToUser(
+        User $user,
+        Mobile $mobile,
+    ): void {
         $exists = $user->person
             ->mobiles()
             ->whereKey($mobile->getKey())
             ->exists();
 
         if (! $exists) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'شماره موبایل انتخاب‌شده متعلق به این کاربر نیست.'
             );
         }
