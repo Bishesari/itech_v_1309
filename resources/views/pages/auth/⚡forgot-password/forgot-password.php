@@ -3,6 +3,7 @@
 use App\Models\Mobile;
 use App\Models\User;
 use App\Services\Auth\PasswordResetService;
+use Carbon\CarbonInterface;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -26,27 +27,31 @@ class extends Component
 
     public int $timer = 0;
 
+    public ?CarbonInterface $expiresAt = null;
+
     public string $errorMessage = '';
 
-    public function checkIdentity(
-        PasswordResetService $passwordResetService,
-    ): void {
+    public function mount(): void
+    {
+        // محاسبه timer اگر expiresAt وجود داشت (برای refresh صفحه)
+        if ($this->expiresAt) {
+            $this->timer = max(0, now()->diffInSeconds($this->expiresAt, false));
+        }
+    }
+
+    public function checkIdentity(PasswordResetService $passwordResetService): void
+    {
         $this->resetErrorBag();
         $this->errorMessage = '';
 
         $this->validate([
-            'identity' => ['required'],
+            'identity' => ['required', 'string', 'max:20'],
         ]);
 
-        $user = $passwordResetService->findByIdentity(
-            $this->identity,
-        );
+        $user = $passwordResetService->findByIdentity($this->identity);
 
         if (! $user) {
-            $this->addError(
-                'identity',
-                'شناسه یافت نشد.',
-            );
+            $this->addError('identity', 'شناسه یافت نشد.');
 
             return;
         }
@@ -54,16 +59,12 @@ class extends Component
         $mobiles = $passwordResetService->mobiles($user);
 
         if ($mobiles->isEmpty()) {
-            $this->addError(
-                'identity',
-                'هیچ شماره موبایلی برای این شناسه ثبت نشده است.',
-            );
+            $this->addError('identity', 'هیچ شماره موبایلی برای این شناسه ثبت نشده است.');
 
             return;
         }
 
         $this->user = $user;
-
         $this->mobiles = $mobiles
             ->map(fn (Mobile $mobile) => [
                 'id' => $mobile->id,
@@ -75,61 +76,58 @@ class extends Component
         $this->selectedMobileId = null;
         $this->otp = '';
         $this->timer = 0;
+        $this->expiresAt = null;
 
         $this->step = 2;
 
+        // اگر فقط یک موبایل داره، خودکار ارسال کن
         if (count($this->mobiles) === 1) {
             $this->selectedMobileId = $this->mobiles[0]['id'];
-
-            $this->sendOtp(
-                $passwordResetService,
-            );
+            $this->sendOtp($passwordResetService);
         }
     }
 
-    public function selectMobile(
-        PasswordResetService $passwordResetService,
-    ): void {
+    public function selectMobile(PasswordResetService $passwordResetService): void
+    {
         $this->resetErrorBag();
         $this->errorMessage = '';
 
-        if (! $this->user || ! $this->selectedMobileId) {
+        $this->validate([
+            'selectedMobileId' => ['required', 'integer'],
+        ]);
+
+        if (! $this->user) {
+            $this->errorMessage = 'اطلاعات بازیابی معتبر نیست. لطفاً دوباره تلاش کنید.';
+
             return;
         }
 
         $mobile = $this->getSelectedMobile();
 
         if (! $mobile) {
-            $this->addError(
-                'selectedMobileId',
-                'شماره موبایل انتخاب‌شده معتبر نیست.',
-            );
+            $this->addError('selectedMobileId', 'شماره موبایل انتخاب‌شده معتبر نیست.');
 
             return;
         }
 
-        $this->sendOtp(
-            $passwordResetService,
-        );
+        $this->sendOtp($passwordResetService);
     }
 
-    public function sendOtp(
-        PasswordResetService $passwordResetService,
-    ): void {
+    public function sendOtp(PasswordResetService $passwordResetService): void
+    {
         $this->resetErrorBag();
         $this->errorMessage = '';
 
         if (! $this->user || ! $this->selectedMobileId) {
+            $this->errorMessage = 'اطلاعات بازیابی معتبر نیست.';
+
             return;
         }
 
         $mobile = $this->getSelectedMobile();
 
         if (! $mobile) {
-            $this->addError(
-                'selectedMobileId',
-                'شماره موبایل انتخاب‌شده معتبر نیست.',
-            );
+            $this->errorMessage = 'شماره موبایل انتخاب‌شده معتبر نیست.';
 
             return;
         }
@@ -141,25 +139,23 @@ class extends Component
             );
 
             $this->otp = '';
+            $this->expiresAt = $challenge->expires_at;
+            $this->timer = max(0, now()->diffInSeconds($this->expiresAt, false));
 
-            $this->timer = max(
-                0,
-                now()->diffInSeconds(
-                    $challenge->expires_at,
-                    false,
-                ),
-            );
-
-            $this->dispatch('set_timer');
+            $this->dispatch('start-timer');
             $this->dispatch('focus-otp');
         } catch (Throwable $e) {
             $this->errorMessage = $e->getMessage();
         }
     }
 
-    public function verifyOtp(
-        PasswordResetService $passwordResetService,
-    ): void {
+    public function resendOtp(PasswordResetService $passwordResetService): void
+    {
+        $this->sendOtp($passwordResetService);
+    }
+
+    public function verifyOtp(PasswordResetService $passwordResetService): void
+    {
         $this->resetErrorBag();
         $this->errorMessage = '';
 
@@ -177,6 +173,13 @@ class extends Component
 
         if (! $mobile) {
             $this->errorMessage = 'شماره موبایل انتخاب‌شده معتبر نیست.';
+            return;
+        }
+
+        // چک کردن انقضای تایمر
+        if ($this->timer <= 0 || ($this->expiresAt && now()->isAfter($this->expiresAt))) {
+            $this->otp = '';
+            $this->errorMessage = 'کد تأیید منقضی شده است. لطفاً کد جدید درخواست کنید.';
 
             return;
         }
@@ -188,11 +191,26 @@ class extends Component
                 verificationCode: $this->otp,
             );
 
-            $this->dispatch('stop_timer');
+            $this->dispatch('stop-timer');
 
-            $this->redirectRoute('login');
+            session()->flash('success', 'کلمه عبور با موفقیت بازیابی شد.');
+
+            $this->redirectRoute('login', navigate: true);
         } catch (Throwable $e) {
+            $this->otp = '';
             $this->errorMessage = $e->getMessage();
+        }
+    }
+
+    public function decrementTimer(): void
+    {
+        if ($this->timer > 0) {
+            $this->timer--;
+        }
+
+        // اگر از سمت سرور هم چک کنیم
+        if ($this->expiresAt && now()->isAfter($this->expiresAt)) {
+            $this->timer = 0;
         }
     }
 
@@ -205,14 +223,13 @@ class extends Component
             'selectedMobileId',
             'otp',
             'timer',
+            'expiresAt',
             'errorMessage',
         ]);
 
         $this->resetErrorBag();
-
         $this->step = 1;
-
-        $this->dispatch('stop_timer');
+        $this->dispatch('stop-timer');
     }
 
     private function getSelectedMobile(): ?Mobile
