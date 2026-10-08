@@ -24,9 +24,7 @@ final class PasswordResetService
     public function findByIdentity(string $identity): ?User
     {
         return User::query()
-            ->whereHas('person', function ($query) use ($identity) {
-                $query->where('identity', $identity);
-            })
+            ->whereHas('person', fn ($query) => $query->where('identity', $identity))
             ->with('person.mobiles')
             ->first();
     }
@@ -39,6 +37,8 @@ final class PasswordResetService
     public function issueVerification(
         User $user,
         Mobile $mobile,
+        ?string $fingerprint = null,
+        ?string $ip = null,
     ) {
         $this->ensureMobileBelongsToUser($user, $mobile);
 
@@ -51,6 +51,8 @@ final class PasswordResetService
             nationalityType: $person->nationality_type,
             identity: $person->identity,
             mobile: $mobile->mobile,
+            fingerprint: $fingerprint,
+            ip: $ip,
         );
     }
 
@@ -61,7 +63,8 @@ final class PasswordResetService
     ): void {
         $this->ensureMobileBelongsToUser($user, $mobile);
 
-        $challenge = $this->verificationChallengeService->verify(
+        // verify باید خودش status/verified_at را هندل کند
+        $this->verificationChallengeService->verify(
             purpose: VerificationPurpose::PasswordReset,
             mobile: $mobile->mobile,
             verificationCode: $verificationCode,
@@ -69,44 +72,29 @@ final class PasswordResetService
 
         $password = PasswordGenerator::generate();
 
-        /*
-         * اول پیامک ارسال می‌شود.
-         * در صورت شکست ارسال، کلمه عبور قبلی همچنان معتبر است.
-         */
+        // اگر ارسال شکست بخورد، پسورد تغییر نکند
         $this->smsGateway->sendPassword(
             mobile: $mobile->mobile,
             username: $user->username,
             password: $password,
         );
 
-        DB::transaction(function () use (
-            $user,
-            $password,
-            $challenge,
-        ): void {
+        DB::transaction(function () use ($user, $password): void {
             $user->update([
-                'password' => $password,
-            ]);
-
-            $challenge->update([
-                'verified_at' => now(),
+                'password' => $password, // hashing توسط cast مدل User
             ]);
         });
     }
 
-    protected function ensureMobileBelongsToUser(
-        User $user,
-        Mobile $mobile,
-    ): void {
+    protected function ensureMobileBelongsToUser(User $user, Mobile $mobile): void
+    {
         $exists = $user->person
             ->mobiles()
             ->whereKey($mobile->getKey())
             ->exists();
 
         if (! $exists) {
-            throw new InvalidArgumentException(
-                'شماره موبایل انتخاب‌شده متعلق به این کاربر نیست.'
-            );
+            throw new InvalidArgumentException('شماره موبایل انتخاب‌شده متعلق به این کاربر نیست.');
         }
     }
 }

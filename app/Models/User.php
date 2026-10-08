@@ -41,6 +41,7 @@ class User extends Authenticatable implements PasskeyUser
     {
         return [
             'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 

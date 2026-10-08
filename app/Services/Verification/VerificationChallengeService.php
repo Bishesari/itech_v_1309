@@ -18,16 +18,6 @@ use Illuminate\Support\Facades\DB;
 
 final class VerificationChallengeService
 {
-    /**
-     * Get the active challenge or create a new one.
-     *
-     * If an active challenge already exists for the mobile/purpose,
-     * it will be returned without sending another SMS.
-     */
-
-    /**
-     * Send SMS through the configured SMS provider.
-     */
     public function __construct(
         private readonly SmsGateway $smsGateway,
     ) {}
@@ -42,13 +32,6 @@ final class VerificationChallengeService
         ?string $fingerprint = null,
         ?string $ip = null,
     ): VerificationChallenge {
-        if ($challenge = $this->findActiveChallenge($purpose, $mobile)) {
-            return $challenge;
-        }
-        $this->ensureCanSendSms($purpose, $mobile);
-        $this->ensureCanSendByFingerprint($purpose, $fingerprint);
-        $this->ensureCanSendByIp($purpose, $ip);
-
         $challenge = DB::transaction(function () use (
             $purpose,
             $firstNameFa,
@@ -58,7 +41,24 @@ final class VerificationChallengeService
             $mobile,
             $fingerprint,
             $ip,
-        ) {
+        ): VerificationChallenge {
+            $active = VerificationChallenge::query()
+                ->active()
+                ->whereNotNull('sms_sent_at')
+                ->where('purpose', $purpose)
+                ->where('mobile', $mobile)
+                ->lockForUpdate()
+                ->latest('id')
+                ->first();
+
+            if ($active) {
+                return $active;
+            }
+
+            $this->ensureCanSendSms($purpose, $mobile);
+            $this->ensureCanSendByFingerprint($purpose, $fingerprint);
+            $this->ensureCanSendByIp($purpose, $ip);
+
             return $this->createChallenge(
                 purpose: $purpose,
                 firstNameFa: $firstNameFa,
@@ -71,37 +71,53 @@ final class VerificationChallengeService
             );
         });
 
-        $this->dispatchSms($challenge);
+        // اگر challenge فعال قبلی بود و sms_sent_at داشت، SMS دوباره ارسال نکن
+        if ($challenge->sms_sent_at === null) {
+            $this->dispatchSms($challenge);
+        }
 
-        return $challenge;
+        return $challenge->fresh();
     }
 
-    /**
-     * Replace the current challenge with a new one and send a new OTP.
-     */
     public function resend(
         VerificationPurpose $purpose,
         string $mobile,
         ?string $fingerprint = null,
         ?string $ip = null,
     ): VerificationChallenge {
-        $this->ensureResendCooldown($purpose, $mobile);
-
         $challenge = DB::transaction(function () use (
             $purpose,
             $mobile,
             $fingerprint,
             $ip,
-        ) {
-            $current = $this->findLatestChallenge($purpose, $mobile);
+        ): VerificationChallenge {
+            $current = VerificationChallenge::query()
+                ->where('purpose', $purpose)
+                ->where('mobile', $mobile)
+                ->whereNull('verified_at')
+                ->whereNotNull('sms_sent_at')
+                ->lockForUpdate()
+                ->latest('id')
+                ->first();
 
             if (! $current) {
                 throw new VerificationChallengeNotFoundException;
             }
 
+            $this->ensureResendCooldown($purpose, $mobile);
             $this->ensureCanSendSms($purpose, $mobile);
             $this->ensureCanSendByFingerprint($purpose, $fingerprint);
             $this->ensureCanSendByIp($purpose, $ip);
+
+            // بی‌اثر کردن چالش‌های قبلی pending
+            VerificationChallenge::query()
+                ->where('purpose', $purpose)
+                ->where('mobile', $mobile)
+                ->whereNull('verified_at')
+                ->where('id', '<>', $current->id)
+                ->update([
+                    'expires_at' => now(),
+                ]);
 
             return $this->createChallenge(
                 purpose: $current->purpose,
@@ -117,7 +133,7 @@ final class VerificationChallengeService
 
         $this->dispatchSms($challenge);
 
-        return $challenge;
+        return $challenge->fresh();
     }
 
     public function verify(
@@ -135,24 +151,18 @@ final class VerificationChallengeService
             throw new ExpiredVerificationChallengeException;
         }
 
-        if (
-            $challenge->attempts >= config('verification.otp.max_attempts')
-        ) {
+        if ($challenge->attempts >= config('verification.otp.max_attempts')) {
             throw new VerificationAttemptsExceededException;
         }
 
         if (! hash_equals($challenge->verification_code, $verificationCode)) {
             $challenge->increment('attempts');
-
             throw new InvalidVerificationCodeException;
         }
 
         return $challenge->fresh();
     }
 
-    /**
-     * Find the currently active challenge.
-     */
     private function findActiveChallenge(
         VerificationPurpose $purpose,
         string $mobile,
@@ -174,13 +184,11 @@ final class VerificationChallengeService
             ->where('purpose', $purpose)
             ->where('mobile', $mobile)
             ->whereNull('verified_at')
+            ->whereNotNull('sms_sent_at')
             ->latest('id')
             ->first();
     }
 
-    /**
-     * Create a new verification challenge.
-     */
     private function createChallenge(
         VerificationPurpose $purpose,
         string $firstNameFa,
@@ -194,30 +202,19 @@ final class VerificationChallengeService
         return VerificationChallenge::query()->create([
             'first_name_fa' => $firstNameFa,
             'last_name_fa' => $lastNameFa,
-
             'nationality_type' => $nationalityType,
-
             'identity' => $identity,
-
             'mobile' => $mobile,
-
             'purpose' => $purpose,
-
             'verification_code' => $this->generateVerificationCode(),
-
             'fingerprint' => $fingerprint,
             'ip' => $ip,
-
             'expires_at' => $this->expiresAt(),
         ]);
     }
 
-    /**
-     * Send the OTP SMS.
-     */
-    private function dispatchSms(
-        VerificationChallenge $challenge,
-    ): void {
+    private function dispatchSms(VerificationChallenge $challenge): void
+    {
         try {
             $this->smsGateway->sendOtp(
                 $challenge->mobile,
@@ -228,31 +225,19 @@ final class VerificationChallengeService
                 'sms_sent_at' => now(),
             ]);
         } catch (\Throwable $e) {
-            throw new SmsDeliveryException(
-                previous: $e,
-            );
+            throw new SmsDeliveryException(previous: $e);
         }
     }
 
-    /**
-     * Generate OTP expiration timestamp.
-     */
     private function expiresAt(): CarbonInterface
     {
-        return now()->addMinutes(
-            config('verification.otp.expires_in')
-        );
+        return now()->addMinutes(config('verification.otp.expires_in'));
     }
 
-    /**
-     * Generate a numeric OTP.
-     */
     private function generateVerificationCode(): string
     {
         $length = config('verification.otp.length');
-
         $min = 10 ** ($length - 1);
-
         $max = (10 ** $length) - 1;
 
         return (string) random_int($min, $max);
@@ -266,13 +251,7 @@ final class VerificationChallengeService
             ->where('purpose', $purpose)
             ->where('mobile', $mobile)
             ->whereNotNull('sms_sent_at')
-            ->where(
-                'sms_sent_at',
-                '>=',
-                now()->subMinutes(
-                    config('verification.otp.send_window')
-                )
-            )
+            ->where('sms_sent_at', '>=', now()->subMinutes(config('verification.otp.send_window')))
             ->count();
 
         if ($count >= config('verification.otp.max_sends')) {
@@ -292,13 +271,7 @@ final class VerificationChallengeService
             ->where('purpose', $purpose)
             ->where('fingerprint', $fingerprint)
             ->whereNotNull('sms_sent_at')
-            ->where(
-                'sms_sent_at',
-                '>=',
-                now()->subMinutes(
-                    config('verification.otp.fingerprint_send_window')
-                )
-            )
+            ->where('sms_sent_at', '>=', now()->subMinutes(config('verification.otp.fingerprint_send_window')))
             ->count();
 
         if ($count >= config('verification.otp.fingerprint_max_sends')) {
@@ -318,19 +291,14 @@ final class VerificationChallengeService
             ->where('purpose', $purpose)
             ->where('ip', $ip)
             ->whereNotNull('sms_sent_at')
-            ->where(
-                'sms_sent_at',
-                '>=',
-                now()->subMinutes(
-                    config('verification.otp.ip_send_window')
-                )
-            )
+            ->where('sms_sent_at', '>=', now()->subMinutes(config('verification.otp.ip_send_window')))
             ->count();
 
         if ($count >= config('verification.otp.ip_max_sends')) {
             throw new SmsRateLimitException;
         }
     }
+
     public function resendAvailableAt(
         VerificationPurpose $purpose,
         string $mobile,
@@ -348,14 +316,11 @@ final class VerificationChallengeService
 
         $availableAt = $challenge->sms_sent_at
             ->copy()
-            ->addMinutes(
-                config('verification.otp.resend_cooldown')
-            );
+            ->addMinutes(config('verification.otp.resend_cooldown'));
 
-        return $availableAt->isFuture()
-            ? $availableAt
-            : null;
+        return $availableAt->isFuture() ? $availableAt : null;
     }
+
     private function ensureResendCooldown(
         VerificationPurpose $purpose,
         string $mobile,

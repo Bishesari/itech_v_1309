@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace App\Services\Registration;
 
 use App\Enums\VerificationPurpose;
+use App\Exceptions\Verification\VerificationChallengeNotFoundException;
 use App\Models\Mobile;
 use App\Models\Person;
 use App\Models\User;
+use App\Models\VerificationChallenge;
 use App\Services\Verification\VerificationChallengeService;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-final class RegistrationService
+final readonly class RegistrationService
 {
     public function __construct(
-        private readonly VerificationChallengeService $verificationChallengeService,
+        private VerificationChallengeService $verificationChallengeService,
     ) {}
 
     public function complete(
@@ -40,26 +42,35 @@ final class RegistrationService
         );
 
         return DB::transaction(function () use ($challenge): User {
+            /** @var VerificationChallenge|null $lockedChallenge */
+            $lockedChallenge = VerificationChallenge::query()
+                ->whereKey($challenge->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lockedChallenge || $lockedChallenge->verified_at !== null) {
+                throw new VerificationChallengeNotFoundException;
+            }
+
             $person = Person::create([
-                'nationality_type' => $challenge->nationality_type,
-                'identity' => $challenge->identity,
-                'first_name_fa' => $challenge->first_name_fa,
-                'last_name_fa' => $challenge->last_name_fa,
+                'nationality_type' => $lockedChallenge->nationality_type,
+                'identity' => $lockedChallenge->identity,
+                'first_name_fa' => $lockedChallenge->first_name_fa,
+                'last_name_fa' => $lockedChallenge->last_name_fa,
             ]);
 
             $mobileModel = Mobile::query()->firstOrCreate([
-                'mobile' => $challenge->mobile,
+                'mobile' => $lockedChallenge->mobile,
             ]);
 
-            $person->mobiles()->attach($mobileModel);
+            $person->mobiles()->syncWithoutDetaching([$mobileModel->id]);
 
             $user = User::create([
                 'person_id' => $person->id,
-                'username' => $challenge->identity,
-                'password' => $challenge->identity,
+                'username' => $lockedChallenge->identity,
+                'password' => $lockedChallenge->identity,
             ]);
-
-            $challenge->update([
+            $lockedChallenge->update([
                 'verified_at' => now(),
             ]);
 

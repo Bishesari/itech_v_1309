@@ -1,5 +1,12 @@
 {{-- View: resources/views/livewire/auth/forgot-password.blade.php --}}
-<div class="flex flex-col gap-6 pb-5">
+<div
+    x-data="{
+        fingerprint: $wire.entangle('fingerprint'),
+        async init() {
+            this.fingerprint = await window.getFingerprint();
+        }
+    }"
+    class="flex flex-col gap-6 pb-5">
     {{-- Header --}}
     <div class="mb-1 text-center">
         <flux:heading size="xl">{{__('فراموشی کلمه عبور')}}</flux:heading>

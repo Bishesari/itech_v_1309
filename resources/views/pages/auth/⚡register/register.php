@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Contracts\SmsGateway;
 use App\Enums\NationalityType;
 use App\Enums\VerificationPurpose;
 use App\Exceptions\Verification\ActiveVerificationChallengeException;
@@ -65,9 +66,7 @@ class extends Component
         }
 
         $callable = $this->normalizers[$field];
-
         $value = (string) ($this->$field ?? '');
-
         $this->$field = (string) $callable($value);
     }
 
@@ -81,49 +80,20 @@ class extends Component
     protected function rules(): array
     {
         return [
-            'first_name_fa' => [
-                'bail',
-                'required',
-                'string',
-                'min:2',
-                'max:30',
-                new PersianName,
-            ],
-
-            'last_name_fa' => [
-                'bail',
-                'required',
-                'string',
-                'min:2',
-                'max:40',
-                new PersianName,
-            ],
-
-            'nationality_type' => [
-                'required',
-                Rule::enum(NationalityType::class),
-            ],
-
+            'first_name_fa' => ['bail', 'required', 'string', 'min:2', 'max:30', new PersianName],
+            'last_name_fa' => ['bail', 'required', 'string', 'min:2', 'max:40', new PersianName],
+            'nationality_type' => ['required', Rule::enum(NationalityType::class)],
             'identity' => [
                 'bail',
                 'required',
                 'string',
-
                 Rule::when(
                     $this->nationality_type === NationalityType::Iranian,
-                    [
-                        'digits:10',
-                        new NationalCode,
-                    ],
-                    [
-                        'digits_between:6,20',
-                        new NotIranianNationalCode,
-                    ],
+                    ['digits:10', new NationalCode],
+                    ['digits_between:6,20', new NotIranianNationalCode],
                 ),
-
                 'unique:people,identity',
             ],
-
             'mobile' => [
                 'bail',
                 'required',
@@ -133,11 +103,10 @@ class extends Component
         ];
     }
 
-    public function continueRegister(
-        VerificationChallengeService $service
-    ): void {
+    public function continueRegister(VerificationChallengeService $service): void
+    {
         $this->normalizeAll();
-
+        $this->resetErrorBag('verification');
         $this->validate();
 
         try {
@@ -152,31 +121,25 @@ class extends Component
                 ip: request()->ip(),
             );
         } catch (SmsRateLimitException) {
-            $this->addError(
-                'verification',
-                'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.'
-            );
+            $this->addError('verification', 'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.');
 
             return;
         } catch (SmsDeliveryException) {
-            $this->addError(
-                'verification',
-                'ارسال کد تأیید با مشکل مواجه شد. لطفاً چند لحظه دیگر دوباره تلاش کنید.'
-            );
+            $this->addError('verification', 'ارسال کد تأیید با مشکل مواجه شد. لطفاً چند لحظه دیگر دوباره تلاش کنید.');
 
             return;
         }
 
         $this->otp = '';
-
         $this->otp_expires_at = $challenge->expires_at->toISOString();
-
         $this->modal('verify-otp')->show();
     }
 
-    public function resendOtp(
-        VerificationChallengeService $service
-    ): void {
+    public function resendOtp(VerificationChallengeService $service): void
+    {
+        $this->normalizeField('mobile');
+        $this->resetErrorBag('otp');
+
         try {
             $challenge = $service->resend(
                 purpose: VerificationPurpose::Registration,
@@ -185,52 +148,46 @@ class extends Component
                 ip: request()->ip(),
             );
         } catch (VerificationChallengeNotFoundException) {
-            $this->addError(
-                'otp',
-                'کد تأیید معتبر یا فعالی برای این شماره وجود ندارد. لطفاً کد جدید درخواست کنید.'
-            );
+            $this->addError('otp', 'کد تأیید معتبر یا فعالی برای این شماره وجود ندارد. لطفاً کد جدید درخواست کنید.');
 
             return;
         } catch (ActiveVerificationChallengeException) {
-            $this->addError(
-                'otp',
-                'کد تأیید فعلی هنوز معتبر است.'
+            $availableAt = $service->resendAvailableAt(
+                purpose: VerificationPurpose::Registration,
+                mobile: $this->mobile,
             );
+
+            $msg = 'کد تأیید فعلی هنوز معتبر است.';
+            if ($availableAt) {
+                $msg .= ' زمان مجاز ارسال مجدد: '.$availableAt->timezone(config('app.timezone'))->format('H:i');
+            }
+
+            $this->addError('otp', $msg);
 
             return;
         } catch (SmsRateLimitException) {
-            $this->addError(
-                'otp',
-                'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.'
-            );
+            $this->addError('otp', 'تعداد درخواست‌های ارسال پیامک بیش از حد مجاز است. لطفاً بعداً دوباره تلاش کنید.');
 
             return;
         } catch (SmsDeliveryException) {
-            $this->addError(
-                'otp',
-                'ارسال مجدد کد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.'
-            );
+            $this->addError('otp', 'ارسال مجدد کد با مشکل مواجه شد. لطفاً دوباره تلاش کنید.');
 
             return;
         }
 
-        $this->resetErrorBag('otp');
-
         $this->otp = '';
-
         $this->otp_expires_at = $challenge->expires_at->toISOString();
     }
 
     public function verifyOtp(
-        RegistrationService $registrationService
+        RegistrationService $registrationService,
+        SmsGateway $smsGateway,
     ): void {
         $this->normalizeField('otp');
+        $this->resetErrorBag('otp');
 
         $this->validate([
-            'otp' => [
-                'required',
-                'digits:6',
-            ],
+            'otp' => ['required', 'digits:6'],
         ]);
 
         try {
@@ -238,6 +195,12 @@ class extends Component
                 purpose: VerificationPurpose::Registration,
                 mobile: $this->mobile,
                 verificationCode: $this->otp,
+            );
+
+            $smsGateway->sendPassword(
+                mobile: $this->mobile,
+                username: $user->username,
+                password: $this->identity,
             );
         } catch (InvalidVerificationCodeException) {
             $this->addError(
@@ -267,15 +230,19 @@ class extends Component
             );
 
             return;
+        } catch (SmsDeliveryException) {
+            $this->addError(
+                'otp',
+                'ثبت نام انجام شد، اما ارسال اطلاعات ورود با مشکل مواجه شد. لطفاً با پشتیبانی تماس بگیرید.'
+            );
+
+            return;
         }
 
-        $this->resetErrorBag('otp');
-
         $this->otp = '';
-
         $this->otp_expires_at = null;
 
-        Auth::login($user);
+        Auth::login($user, true);
 
         request()->session()->regenerate();
 

@@ -64,9 +64,21 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $username = (string) $request->input(Fortify::username(), '');
+            $throttleKey = Str::transliterate(Str::lower(trim($username)).'|'.$request->ip());
 
-            return Limit::perMinute(5)->by($throttleKey);
+            return Limit::perMinute(5)
+                ->by($throttleKey)
+                ->response(function (Request $request, array $headers) {
+                    $seconds = (int) ($headers['Retry-After'] ?? 60);
+
+                    return back()
+                        ->withInput($request->only(Fortify::username(), 'remember'))
+                        ->withErrors([
+                            Fortify::username() => "تلاش‌های ورود بیش از حد مجاز است. لطفاً {$seconds} ثانیه دیگر دوباره تلاش کنید.",
+                        ]);
+                });
+
         });
 
         RateLimiter::for('passkeys', function (Request $request) {

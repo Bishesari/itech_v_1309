@@ -8,7 +8,7 @@
 
         <x-passkey-verify />
 
-        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6" autocomplete="off"
+        <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6"
               x-data="{ loading: false }"
               @submit="loading = true"
         >
@@ -20,6 +20,7 @@
 
                 <flux:input name="username" :value="old('username')" type="text" inputmode="text" required autofocus
                             input:class="text-center py-6 font-semibold text-base!" maxlength="25" dir="ltr"
+                            autocomplete="username"
                 />
                 <flux:error name="username" class="-mt-2! text-xs font-light!"/>
             </flux:field>
@@ -30,6 +31,7 @@
 
                 <flux:input name="password" type="password" inputmode="text" required viewable
                             input:class="text-center py-6 font-semibold text-base!" maxlength="30" dir="ltr"
+                            autocomplete="current-password"
                 />
                 @if (Route::has('forgot-password'))
                     <flux:link class="absolute top-0 text-sm inset-e-0" :href="route('forgot-password')" wire:navigate>

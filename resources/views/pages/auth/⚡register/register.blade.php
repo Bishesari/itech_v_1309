@@ -29,17 +29,10 @@
         :status="session('status')"
     />
 
-    <form
-        wire:submit="continueRegister"
-        class="flex flex-col gap-6"
-        autocomplete="off"
-    >
+    <form wire:submit="continueRegister" class="flex flex-col gap-6" autocomplete="off">
         {{-- نام --}}
         <flux:field>
-            <flux:label
-                badge="فارسی"
-                class="text-xs font-light!"
-            >
+            <flux:label badge="فارسی" class="text-xs font-light!">
                 {{ __('نام') }}
             </flux:label>
 
@@ -75,6 +68,7 @@
                 required
                 maxlength="40"
                 input:class="text-center py-6 font-semibold text-base!"
+                autocomplete="off"
             />
 
             <flux:error
@@ -117,6 +111,7 @@
                 required
                 x-bind:maxlength="identityMaxLength"
                 input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                autocomplete="off"
             />
 
             <flux:error
@@ -142,6 +137,7 @@
                 maxlength="11"
                 required
                 input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                autocomplete="off"
             />
 
             <flux:error
@@ -220,8 +216,7 @@
     >
         <form
             wire:submit="verifyOtp"
-            class="space-y-8"
-            autocomplete="off"
+            class="space-y-8" autocomplete="off"
         >
             <div class="max-w-72 mx-auto space-y-2">
                 <flux:heading
@@ -239,11 +234,12 @@
             <flux:otp
                 wire:model="otp"
                 id="otp-input-wrapper"
-{{--                submit="auto"--}}
+                submit="auto"
                 :error:icon="false"
                 error:class="text-center"
                 class="mx-auto"
                 dir="ltr"
+                autocomplete="off"
             >
                 <flux:otp.input autofocus />
                 <flux:otp.input />
@@ -329,12 +325,14 @@
                         class="w-full cursor-pointer"
                         wire:loading.attr="disabled"
                         wire:target="verifyOtp"
+                        :loading="false"
                     >
                         <span wire:loading.remove wire:target="verifyOtp">
                             {{ __('تأیید کد') }}
                         </span>
                         <span wire:loading wire:target="verifyOtp">
                             {{ __('در حال بررسی ...') }}
+                             <flux:icon.loading class="size-4 inline" />
                         </span>
                     </flux:button>
 
