@@ -49,8 +49,11 @@ class Person extends Model
 
     public function initials(): string
     {
-        return mb_substr($this->first_name_fa, 0, 1)
+        return trim(
+            mb_substr($this->first_name_fa ?? '', 0, 1)
             .' '
-            .mb_substr($this->last_name_fa, 0, 1);
+            .mb_substr($this->last_name_fa ?? '', 0, 1)
+        );
     }
+
 }

@@ -10,13 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 /**
  * @property int $id
+ * @property int $person_id
+ * @property string $username
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -24,6 +25,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Person|null $person
  */
 #[Fillable(['person_id', 'username', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -32,32 +34,37 @@ class User extends Authenticatable implements PasskeyUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'password' => 'hashed',
-            'two_factor_confirmed_at' => 'datetime',
         ];
     }
 
-    /**
-     * Get the user's initials
-     */
-    public function initials(): string
-    {
-        $initials = Str::initials($this->name, true);
-
-        return Str::length($initials) > 1
-            ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
-            : $initials;
-    }
     public function person(): BelongsTo
     {
         return $this->belongsTo(Person::class);
+    }
+
+    /**
+     * دریافت نام نمایشی کاربر (نام کامل از Person یا نام کاربری)
+     */
+    public function name(): string
+    {
+        $fullName = $this->person?->fullName();
+
+        return ! empty($fullName) ? $fullName : $this->username;
+    }
+
+    /**
+     * دریافت حروف اختصاری آواتار
+     */
+    public function initials(): string
+    {
+        if ($this->person && ($this->person->first_name_fa || $this->person->last_name_fa)) {
+            return $this->person->initials();
+        }
+
+        return mb_strtoupper(mb_substr($this->username, 0, 2));
     }
 }

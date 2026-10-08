@@ -51,18 +51,28 @@
 
     {{-- Authentication --}}
     @auth
-        <flux:dropdown position="top" align="start" >
-            @php $person = auth()->user()->person; @endphp
-            <flux:profile :name="$person?->fullName()" :initials="$person?->initials()" />
+        <flux:dropdown position="top" align="start">
+            <flux:profile
+                :name="auth()->user()->name()"
+                :initials="auth()->user()->initials()"
+            />
+
             <flux:menu>
-                <flux:menu.item href="{{ route('dashboard') }}" icon="computer-desktop" wire:navigate >
+                <flux:menu.item :href="route('dashboard')" icon="computer-desktop" wire:navigate>
                     {{ __('داشبورد') }}
                 </flux:menu.item>
+
                 <flux:menu.separator />
-                <form method="POST" action="{{ route('logout') }}" class="w-full" >
+
+                <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
-                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full" >
-                        {{ __('خروج') }}
+                    <flux:menu.item
+                        as="button"
+                        type="submit"
+                        icon="arrow-right-start-on-rectangle"
+                        class="w-full cursor-pointer"
+                    >
+                        {{ __('خروج از سیستم') }}
                     </flux:menu.item>
                 </form>
             </flux:menu>

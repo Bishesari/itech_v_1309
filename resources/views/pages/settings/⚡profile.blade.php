@@ -9,7 +9,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Title('Profile settings')] class extends Component {
+new #[Title('تنظیمات پروفایل')] class extends Component {
     use ProfileValidationRules;
 
     public string $name = '';
@@ -20,8 +20,12 @@ new #[Title('Profile settings')] class extends Component {
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->name;
-        $this->email = Auth::user()->email;
+        // در اینجا از متد جدیدی که ساختیم استفاده کردیم
+        $this->name = Auth::user()->name();
+
+        // اگر ستون ایمیل ندارید و فقط username دارید، باید دقت کنید که این بخش
+        // برای سیستم تایید ایمیل (MustVerifyEmail) نیاز به فیلد email دارد
+        $this->email = Auth::user()->email ?? '';
     }
 
     /**
@@ -41,7 +45,7 @@ new #[Title('Profile settings')] class extends Component {
 
         $user->save();
 
-        Flux::toast(variant: 'success', text: __('Profile updated.'));
+        Flux::toast(variant: 'success', text: __('پروفایل با موفقیت به‌روزرسانی شد.'));
     }
 
     /**
@@ -59,7 +63,7 @@ new #[Title('Profile settings')] class extends Component {
 
         $user->sendEmailVerificationNotification();
 
-        Session::flash('status', 'verification-link-sent');
+        Session::put('status', 'verification-link-sent');
     }
 
     #[Computed]
@@ -79,28 +83,28 @@ new #[Title('Profile settings')] class extends Component {
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading level="2" class="sr-only">{{ __('Profile settings') }}</flux:heading>
+    <flux:heading level="2" class="sr-only">{{ __('تنظیمات پروفایل') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
+    <x-pages::settings.layout :heading="__('پروفایل')" :subheading="__('نام و آدرس ایمیل خود را به‌روزرسانی کنید')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
+            <flux:input wire:model="name" :label="__('نام')" type="text" required autofocus autocomplete="name" />
 
             <div>
-                <flux:input wire:model="email" :label="__('Email')" type="email" required autocomplete="email" />
+                <flux:input wire:model="email" :label="__('ایمیل')" type="email" required autocomplete="email" />
 
                 @if ($this->hasUnverifiedEmail)
                     <div>
                         <flux:text class="mt-4">
-                            {{ __('Your email address is unverified.') }}
+                            {{ __('آدرس ایمیل شما تایید نشده است.') }}
 
                             <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
-                                {{ __('Click here to re-send the verification email.') }}
+                                {{ __('برای ارسال مجدد ایمیل تایید، اینجا کلیک کنید.') }}
                             </flux:link>
                         </flux:text>
 
                         @if (session('status') === 'verification-link-sent')
                             <flux:text class="mt-2 font-medium !dark:text-green-400 !text-green-600">
-                                {{ __('A new verification link has been sent to your email address.') }}
+                                {{ __('لینک تایید جدید به آدرس ایمیل شما ارسال شد.') }}
                             </flux:text>
                         @endif
                     </div>
@@ -110,7 +114,7 @@ new #[Title('Profile settings')] class extends Component {
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
                     <flux:button variant="primary" type="submit" class="w-full" data-test="update-profile-button">
-                        {{ __('Save') }}
+                        {{ __('ذخیره') }}
                     </flux:button>
                 </div>
 
