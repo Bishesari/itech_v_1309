@@ -146,8 +146,6 @@
                         <flux:otp
                             wire:model="otp"
                             id="otp-input-wrapper"
-                            :error:icon="false"
-                            error:class="text-center"
                             class="mx-auto"
                             dir="ltr"
                             inputmode="numeric"
@@ -252,9 +250,13 @@
                     </div>
 
                     @if ($errorMessage)
-                        <flux:callout variant="danger" icon="exclamation-triangle">
-                            {{ $errorMessage }}
+
+                        <flux:callout icon="exclamation-triangle" variant="danger">
+                            <flux:callout.text class="text-center font-light">
+                                {{ $errorMessage }}
+                            </flux:callout.text>
                         </flux:callout>
+
                     @endif
 
                     <flux:button
