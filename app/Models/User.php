@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -49,12 +50,17 @@ class User extends Authenticatable implements PasskeyUser
     /**
      * دریافت نام نمایشی کاربر (نام کامل از Person یا نام کاربری)
      */
-    public function name(): string
+    protected function name(): Attribute
     {
-        $fullName = $this->person?->fullName();
+        return Attribute::make(
+            get: function () {
+                $fullName = $this->person?->fullName();
 
-        return ! empty($fullName) ? $fullName : $this->username;
+                return ! empty($fullName) ? $fullName : $this->username;
+            }
+        );
     }
+
 
     /**
      * دریافت حروف اختصاری آواتار

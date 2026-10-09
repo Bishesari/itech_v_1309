@@ -1,31 +1,21 @@
 <?php
 
-use App\Concerns\ProfileValidationRules;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-use Livewire\Attributes\Computed;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('تنظیمات پروفایل')] class extends Component {
-    use ProfileValidationRules;
 
-    public string $name = '';
-    public string $email = '';
+    public string $username = '';
 
     /**
      * Mount the component.
      */
     public function mount(): void
     {
-        // در اینجا از متد جدیدی که ساختیم استفاده کردیم
-        $this->name = Auth::user()->name();
-
-        // اگر ستون ایمیل ندارید و فقط username دارید، باید دقت کنید که این بخش
-        // برای سیستم تایید ایمیل (MustVerifyEmail) نیاز به فیلد email دارد
-        $this->email = Auth::user()->email ?? '';
+        $this->username = Auth::user()->username ?? '';
     }
 
     /**
@@ -34,49 +24,26 @@ new #[Title('تنظیمات پروفایل')] class extends Component {
     public function updateProfileInformation(): void
     {
         $user = Auth::user();
-
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate([
+            'username' => [
+                'required',
+                'string',
+                'min:3',
+                'max:25',
+                'alpha_dash:ascii',
+                Rule::unique('users', 'username')->ignore($user->id),
+            ],
+        ]);
 
         $user->fill($validated);
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
+        if ($user->isDirty('username')) {
+            $user->save();
+
+            Flux::toast(text: __('نام کاربری با موفقیت به‌روزرسانی شد.'), variant: 'success');
+        } else {
+            Flux::toast(text: __('تغییری در اطلاعات ایجاد نشد.'), variant: 'warning');
         }
-
-        $user->save();
-
-        Flux::toast(variant: 'success', text: __('پروفایل با موفقیت به‌روزرسانی شد.'));
-    }
-
-    /**
-     * Send an email verification notification to the current user.
-     */
-    public function resendVerificationNotification(): void
-    {
-        $user = Auth::user();
-
-        if ($user->hasVerifiedEmail()) {
-            $this->redirectIntended(default: route('dashboard', absolute: false));
-
-            return;
-        }
-
-        $user->sendEmailVerificationNotification();
-
-        Session::put('status', 'verification-link-sent');
-    }
-
-    #[Computed]
-    public function hasUnverifiedEmail(): bool
-    {
-        return Auth::user() instanceof MustVerifyEmail && ! Auth::user()->hasVerifiedEmail();
-    }
-
-    #[Computed]
-    public function showDeleteUser(): bool
-    {
-        return ! Auth::user() instanceof MustVerifyEmail
-            || (Auth::user() instanceof MustVerifyEmail && Auth::user()->hasVerifiedEmail());
     }
 }; ?>
 
@@ -85,31 +52,19 @@ new #[Title('تنظیمات پروفایل')] class extends Component {
 
     <flux:heading level="2" class="sr-only">{{ __('تنظیمات پروفایل') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('پروفایل')" :subheading="__('نام و آدرس ایمیل خود را به‌روزرسانی کنید')">
+    <x-pages::settings.layout :heading="__('پروفایل')" :subheading="__('نام کاربری خود را به‌روزرسانی کنید')">
         <form wire:submit="updateProfileInformation" class="my-6 w-full space-y-6">
-            <flux:input wire:model="name" :label="__('نام')" type="text" required autofocus autocomplete="name" />
-
-            <div>
-                <flux:input wire:model="email" :label="__('ایمیل')" type="email" required autocomplete="email" />
-
-                @if ($this->hasUnverifiedEmail)
-                    <div>
-                        <flux:text class="mt-4">
-                            {{ __('آدرس ایمیل شما تایید نشده است.') }}
-
-                            <flux:link class="text-sm cursor-pointer" wire:click.prevent="resendVerificationNotification">
-                                {{ __('برای ارسال مجدد ایمیل تایید، اینجا کلیک کنید.') }}
-                            </flux:link>
-                        </flux:text>
-
-                        @if (session('status') === 'verification-link-sent')
-                            <flux:text class="mt-2 font-medium !dark:text-green-400 !text-green-600">
-                                {{ __('لینک تایید جدید به آدرس ایمیل شما ارسال شد.') }}
-                            </flux:text>
-                        @endif
-                    </div>
-                @endif
-            </div>
+            <flux:input
+                wire:model="username"
+                :label="__('نام کاربری')"
+                autocomplete="off"
+                required
+                autofocus
+                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                maxlength="25"
+                type="text"
+                dir="ltr"
+            />
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
@@ -117,12 +72,10 @@ new #[Title('تنظیمات پروفایل')] class extends Component {
                         {{ __('ذخیره') }}
                     </flux:button>
                 </div>
-
             </div>
         </form>
 
-        @if ($this->showDeleteUser)
-            <livewire:pages::settings.delete-user-form />
-        @endif
+        <livewire:pages::settings.delete-user-form />
+
     </x-pages::settings.layout>
 </section>
