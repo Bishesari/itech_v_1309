@@ -35,7 +35,12 @@ new class extends Component {
             </flux:subheading>
         </div>
 
-        <flux:input wire:model="password" :label="__('رمز عبور')" type="password" viewable />
+
+
+        <flux:input wire:model="password" :label="__('رمز عبور')" type="password" viewable autocomplete="off"
+                    input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                    dir="ltr"
+        />
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>

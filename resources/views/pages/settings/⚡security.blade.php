@@ -13,7 +13,7 @@ use Laravel\Passkeys\Actions\DeletePasskey;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 
-new #[Title('Security settings')] class extends Component {
+new #[Title('تنظیمات امنیتی')] class extends Component {
     use PasswordValidationRules;
 
     public string $current_password = '';
@@ -173,31 +173,38 @@ new #[Title('Security settings')] class extends Component {
 
     <x-pages::settings.layout :heading="__('تغییر رمز عبور')" :subheading="__('اطمینان حاصل کنید که حساب کاربری شما از یک رمز عبور طولانی و تصادفی برای حفظ امنیت استفاده می‌کند')">
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
+
             <flux:input
                 wire:model="current_password"
                 :label="__('رمز عبور فعلی')"
                 type="password"
                 required
-                autocomplete="current-password"
+                autocomplete="off"
                 viewable
+                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                dir="ltr"
             />
             <flux:input
                 wire:model="password"
                 :label="__('رمز عبور جدید')"
                 type="password"
                 required
-            autocomplete="new-password"
-            passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-            viewable
+                autocomplete="off"
+                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                viewable
+                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                dir="ltr"
             />
             <flux:input
                 wire:model="password_confirmation"
                 :label="__('تکرار رمز عبور جدید')"
-            type="password"
-            required
-            autocomplete="new-password"
-            passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-            viewable
+                type="password"
+                required
+                autocomplete="off"
+                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                viewable
+                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
+                dir="ltr"
             />
 
             <div class="flex items-center gap-4">
