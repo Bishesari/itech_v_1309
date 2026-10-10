@@ -194,11 +194,22 @@ new class extends Component {
                     <flux:otp
                         name="code"
                         wire:model="code"
-                        length="6"
                         label="{{ __('کد تأیید دو مرحله‌ای') }}"
-                        label:sr-only
                         class="mx-auto"
-                    />
+                        dir="ltr"
+                        autocomplete="off"
+                    >
+                        <flux:otp.input autofocus />
+                        <flux:otp.input />
+                        <flux:otp.input />
+
+                        <flux:otp.separator />
+
+                        <flux:otp.input />
+                        <flux:otp.input />
+                        <flux:otp.input />
+                    </flux:otp>
+
                 </div>
 
                 <div class="flex items-center space-x-3 rtl:space-x-reverse">
