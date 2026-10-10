@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 class CurrentRoleContextService
 {
-    private const SESSION_KEY = 'current_role_assignment_id';
+    private const string SESSION_KEY = 'auth.current_role_assignment_id';
 
     /**
      * نقش‌های فعال و معتبر شخص.
@@ -20,10 +20,8 @@ class CurrentRoleContextService
         return RoleAssignment::query()
             ->where('person_id', $person->id)
             ->active()
-            ->with([
-                'role',
-                'membership.branch',
-            ])
+            ->whereHas('role', fn ($q) => $q->where('is_active', true))
+            ->with(['role', 'membership.branch'])
             ->get()
             ->filter(fn (RoleAssignment $assignment) => $this->isValid($assignment))
             ->values();
@@ -36,7 +34,7 @@ class CurrentRoleContextService
     {
         $assignmentId = session(self::SESSION_KEY);
 
-        if (!$assignmentId) {
+        if (! $assignmentId) {
             return null;
         }
 
@@ -44,13 +42,11 @@ class CurrentRoleContextService
             ->whereKey($assignmentId)
             ->where('person_id', $person->id)
             ->active()
-            ->with([
-                'role',
-                'membership.branch',
-            ])
+            ->whereHas('role', fn ($q) => $q->where('is_active', true)) // ریز-بهینه‌سازی
+            ->with(['role', 'membership.branch'])
             ->first();
 
-        if (!$assignment || !$this->isValid($assignment)) {
+        if (! $assignment || ! $this->isValid($assignment)) {
             $this->clear();
 
             return null;
@@ -76,7 +72,7 @@ class CurrentRoleContextService
             ])
             ->first();
 
-        if (!$assignment || !$this->isValid($assignment)) {
+        if (! $assignment || ! $this->isValid($assignment)) {
             abort(403);
         }
 
@@ -102,16 +98,15 @@ class CurrentRoleContextService
     {
         $role = $assignment->role;
 
-        if (!$role || !$role->is_active) {
+        if (! $role || ! $role->is_active) {
             return false;
         }
 
         return match ($role->scope) {
-            RoleScope::System,
-            RoleScope::Institute => $assignment->membership_id === null,
+            RoleScope::System, RoleScope::Institute => $assignment->membership_id === null,
 
-            RoleScope::Branch =>
-                $assignment->membership !== null
+            RoleScope::Branch => $assignment->membership !== null
+                && $assignment->membership->person_id === $assignment->person_id
                 && $assignment->membership->is_active
                 && $assignment->membership->branch !== null
                 && $assignment->membership->branch->is_active,

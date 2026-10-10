@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Person extends Model
 {
-
     protected function casts(): array
     {
         return [
@@ -42,6 +41,11 @@ class Person extends Model
         return $this->hasMany(RoleAssignment::class);
     }
 
+    public function activeRoleAssignments(): HasMany
+    {
+        return $this->roleAssignments()->where('is_active', true);
+    }
+
     public function fullName(): string
     {
         return trim($this->first_name_fa.' '.$this->last_name_fa);
@@ -55,5 +59,4 @@ class Person extends Model
             .mb_substr($this->last_name_fa ?? '', 0, 1)
         );
     }
-
 }
