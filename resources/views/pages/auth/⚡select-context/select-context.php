@@ -21,35 +21,72 @@ class extends Component
 
     public function mount(CurrentRoleContextService $contextService): void
     {
-        $this->assignments = $contextService->available(
-            auth()->user()->person,
-        );
+        $person = auth()->user()->person;
 
-        // این صفحه فقط برای چند نقش است
-        if ($this->assignments->count() < 2) {
+        $this->assignments = $contextService->available($person);
+
+        // بدون نقش: ادامه به داشبورد تازه‌وارد
+        if ($this->assignments->isEmpty()) {
             $this->redirectRoute('dashboard', navigate: true);
 
             return;
         }
+
+        // یک نقش: انتخاب خودکار و ورود به داشبورد
+        if ($this->assignments->count() === 1) {
+            $assignment = $this->assignments->first();
+
+            $contextService->select($person, $assignment->id);
+
+            $this->redirectRoute('dashboard', navigate: true);
+        }
     }
 
-    public function select(int $assignmentId): void
-    {
-        $assignment = $this->assignments->firstWhere('id', $assignmentId);
+    public function select(
+        int $assignmentId,
+        CurrentRoleContextService $contextService,
+    ): void {
+        // دریافت دوباره نقش‌های معتبر
+        $this->assignments = $contextService->available(
+            auth()->user()->person,
+        );
+
+        $assignment = $this->assignments->firstWhere(
+            'id',
+            $assignmentId,
+        );
 
         if (! $assignment) {
+            $this->selectedAssignmentId = null;
+            $this->selectedAssignment = null;
+
+            $this->addError(
+                'selectedAssignmentId',
+                'این نقش دیگر قابل انتخاب نیست. صفحه را بررسی کنید.',
+            );
+
             return;
         }
 
-        $this->selectedAssignmentId = $assignmentId;
+        $this->resetValidation('selectedAssignmentId');
+
+        $this->selectedAssignmentId = (int) $assignment->id;
         $this->selectedAssignment = $assignment;
     }
 
-    public function confirm(CurrentRoleContextService $service): void
+    public function confirm(CurrentRoleContextService $contextService): void
     {
-        $allowedIds = $this->assignments->pluck('id')->all();
+        $person = auth()->user()->person;
 
-        $this->validate([
+        // اعتبارسنجی بر اساس نقش‌های معتبر در همین لحظه
+        $this->assignments = $contextService->available($person);
+
+        $allowedIds = $this->assignments
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $validated = $this->validate([
             'selectedAssignmentId' => [
                 'required',
                 'integer',
@@ -57,9 +94,9 @@ class extends Component
             ],
         ]);
 
-        $service->select(
-            auth()->user()->person,
-            $this->selectedAssignmentId,
+        $contextService->select(
+            $person,
+            (int) $validated['selectedAssignmentId'],
         );
 
         $this->redirectRoute('dashboard', navigate: true);

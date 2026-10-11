@@ -23,14 +23,14 @@ class EnsureRoleContext
         $available = $service->available($person);
         $count = $available->count();
 
-        // بدون نقش => newcomer => اجازه ورود به داشبورد
+        // کاربر بدون نقش: newcomer
         if ($count === 0) {
-            // اگر context قبلی مانده، پاک کن
             $service->clear();
+
             return $next($request);
         }
 
-        // تک نقش => اتوماتیک انتخاب کن
+        // فقط یک نقش معتبر: انتخاب خودکار
         if ($count === 1) {
             $only = $available->first();
             $current = $service->current($person);
@@ -42,11 +42,20 @@ class EnsureRoleContext
             return $next($request);
         }
 
-        // چند نقش => اگر current ندارد، بفرست صفحه انتخاب نقش
+        // چند نقش معتبر: انتخاب باید متعلق به همین مجموعه باشد
         $current = $service->current($person);
 
-        if (! $current && ! $request->routeIs('role-selection')) {
-            return redirect()->route('role-selection');
+        $hasValidSelection = $current
+            && $available->contains(
+                fn ($assignment) => $assignment->id === $current->assignment->id
+            );
+
+        if (! $hasValidSelection) {
+            $service->clear();
+
+            if (! $request->routeIs('role-selection')) {
+                return redirect()->route('role-selection');
+            }
         }
 
         return $next($request);

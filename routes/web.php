@@ -7,7 +7,7 @@ Route::livewire('/', 'pages::home')->name('home');
 
 Route::middleware('auth')->group(function () {
     // صفحه انتخاب نقش (برای کاربر چندنقشه وقتی context ندارد)
-    Route::livewire('/role-selection', 'auth::select-context')->name('role-selection');
+    Route::livewire('/role-selection', 'pages::auth.select-context')->name('role-selection');
 
     Route::middleware('role.context')->group(function () {
         Route::get('dashboard', function (CurrentRoleContextService $contextService) {
