@@ -23,7 +23,6 @@ class DatabaseSeeder extends Seeder
         $this->call(MobilePersonSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(RoleSeeder::class);
-        $this->call(MembershipSeeder::class);
         $this->call(RoleAssignmentSeeder::class);
     }
 }

@@ -27,15 +27,5 @@ class MobileSeeder extends Seeder
                 'mobile' => '09350568163',
             ],
         );
-        Mobile::query()->updateOrCreate(
-            [
-                'mobile' => '09113169302',
-            ],
-        );
-        Mobile::query()->updateOrCreate(
-            [
-                'mobile' => '09177729312',
-            ],
-        );
     }
 }

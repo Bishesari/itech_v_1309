@@ -27,18 +27,6 @@ class MobilePersonSeeder extends Seeder
         MobilePerson::query()->updateOrCreate(
             [
                 'mobile_id' => '3',
-                'person_id' => '1',
-            ],
-        );
-        MobilePerson::query()->updateOrCreate(
-            [
-                'mobile_id' => '4',
-                'person_id' => '1',
-            ],
-        );
-        MobilePerson::query()->updateOrCreate(
-            [
-                'mobile_id' => '2',
                 'person_id' => '2',
             ],
         );

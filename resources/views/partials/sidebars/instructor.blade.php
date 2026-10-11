@@ -5,7 +5,6 @@
     <flux:icon.loading x-show="loading" class="inline absolute left-2 top-2 size-3.5 text-stone-500"/>
 </flux:navlist.item>
 
-
 <flux:navlist.group :heading="__('اطلاعات پایه')" class="grid" expandable>
 
 </flux:navlist.group>

@@ -1,18 +1,22 @@
+
 @php
     use App\Enums\RoleCode;
     use App\Services\Authorization\CurrentRoleContextService;
 
     $user = auth()->user();
-    $service = app(CurrentRoleContextService::class);
-
     $person = $user?->person;
+
+    $service = app(CurrentRoleContextService::class);
 
     $context = $person
         ? $service->current($person)
         : null;
 
-    $hasNoRoles = $person
-        && $service->available($person)->isEmpty();
+    $hasNoRoles = false;
+
+    if ($person && ! $context) {
+        $hasNoRoles = $service->available($person)->isEmpty();
+    }
 @endphp
 
 @if ($context)

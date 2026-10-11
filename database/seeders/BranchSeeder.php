@@ -15,38 +15,38 @@ class BranchSeeder extends Seeder
      */
     public function run(): void
     {
-        $tehran = Province::where('slug', 'tehran')->firstOrFail();
+        $bushehr = Province::where('slug', 'bushehr')->firstOrFail();
 
-        $tehranCity = City::where('province_id', $tehran->id)
-            ->where('slug', 'tehran')
+        $bushehrcity = City::where('province_id', $bushehr->id)
+            ->where('slug', 'bushehr')
             ->firstOrFail();
 
         Branch::updateOrCreate(
-            ['code' => 'BR00001'],
+            ['code' => 'BU001'],
             [
-                'short_name' => 'مرکزی',
+                'short_name' => 'مرکزی بوشهر',
                 'is_main' => true,
-                'province_id' => $tehran->id,
-                'city_id' => $tehranCity->id,
-                'address' => 'تهران، شعبه مرکزی',
-                'postal_code' => null,
-                'phone' => null,
-                'mobile' => null,
+                'province_id' => $bushehr->id,
+                'city_id' => $bushehrcity->id,
+                'address' => 'بوشهر، سنگی، اول گلخونه، ساختمان سیراف',
+                'postal_code' => '7514977863',
+                'phone' => '07733103350',
+                'mobile' => '09350568163',
                 'is_active' => true,
             ]
         );
 
         Branch::updateOrCreate(
-            ['code' => 'BR00002'],
+            ['code' => 'BU002'],
             [
-                'short_name' => 'غرب',
+                'short_name' => 'یک بوشهر',
                 'is_main' => false,
-                'province_id' => $tehran->id,
-                'city_id' => $tehranCity->id,
-                'address' => 'تهران، شعبه غرب',
+                'province_id' => $bushehr->id,
+                'city_id' => $bushehrcity->id,
+                'address' => 'بوشهر، میدان برج، پشت بیمارستان مادر و کودک',
                 'postal_code' => null,
-                'phone' => null,
-                'mobile' => null,
+                'phone' => '07733103350',
+                'mobile' => '09034336111',
                 'is_active' => true,
             ]
         );
