@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role.context' => EnsureRoleContext::class,
         ]);
+        $middleware->preventRequestForgery(
+            except: [
+                'payments/sep/callback',
+            ],
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

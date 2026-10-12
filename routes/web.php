@@ -15,10 +15,11 @@ Route::middleware('auth')->group(function () {
         'show',
     ])->name('payments.sep-test');
 
-    Route::get('/payments/sep/callback', [
+    Route::post('/payments/sep-test/token', [
         SepPaymentController::class,
-        'callback',
-    ])->name('payments.sep.callback');
+        'requestToken',
+    ])->name('payments.sep-test.token');
+
 
     Route::middleware('role.context')->group(function () {
         Route::get('dashboard', function (CurrentRoleContextService $contextService) {
@@ -27,11 +28,13 @@ Route::middleware('auth')->group(function () {
 
             return view('dashboard', compact('context'));
         })->name('dashboard');
-
-
-
     });
 });
+// این مسیر باید از سمت درگاه قابل دسترسی باشد.
+Route::post('/payments/sep/callback', [
+    SepPaymentController::class,
+    'callback',
+])->name('payments.sep.callback');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
