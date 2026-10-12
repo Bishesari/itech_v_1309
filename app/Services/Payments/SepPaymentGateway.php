@@ -7,11 +7,6 @@ use RuntimeException;
 
 class SepPaymentGateway
 {
-    /**
-     * Request a payment token from SEP.
-     *
-     * This method does not initiate or confirm a payment.
-     */
     public function requestToken(
         int $amount,
         string $resNum,
@@ -26,15 +21,9 @@ class SepPaymentGateway
             );
         }
 
-        if ($amount <= 0) {
+        if ($amount <= 0 || blank($resNum)) {
             throw new RuntimeException(
-                'Payment amount must be greater than zero.'
-            );
-        }
-
-        if (blank($resNum)) {
-            throw new RuntimeException(
-                'Payment reservation number is required.'
+                'Invalid payment amount or reservation number.'
             );
         }
 
@@ -61,16 +50,9 @@ class SepPaymentGateway
 
         $response = Http::asJson()
             ->acceptJson()
-            ->connectTimeout(
-                config('services.sep.connect_timeout', 5)
-            )
-            ->timeout(
-                config('services.sep.timeout', 15)
-            )
-            ->post(
-                config('services.sep.token_url'),
-                $payload
-            );
+            ->connectTimeout(config('services.sep.connect_timeout', 5))
+            ->timeout(config('services.sep.timeout', 15))
+            ->post(config('services.sep.token_url'), $payload);
 
         if (! $response->successful()) {
             throw new RuntimeException(
@@ -93,5 +75,42 @@ class SepPaymentGateway
         }
 
         return $result['token'];
+    }
+
+    public function verifyTransaction(string $refNum): array
+    {
+        $terminalId = config('services.sep.terminal_id');
+
+        if (blank($terminalId) || blank($refNum)) {
+            throw new RuntimeException(
+                'SEP terminal ID or reference number is missing.'
+            );
+        }
+
+        $response = Http::asJson()
+            ->acceptJson()
+            ->connectTimeout(config('services.sep.connect_timeout', 5))
+            ->timeout(config('services.sep.timeout', 15))
+            ->post(config('services.sep.verify_url'), [
+                'RefNum' => $refNum,
+                'TerminalNumber' => (int) $terminalId,
+            ]);
+
+        if (! $response->successful()) {
+            throw new RuntimeException(
+                'SEP verification request failed with HTTP status '
+                .$response->status().'.'
+            );
+        }
+
+        $result = $response->json();
+
+        if (! is_array($result)) {
+            throw new RuntimeException(
+                'SEP returned an invalid verification response.'
+            );
+        }
+
+        return $result;
     }
 }

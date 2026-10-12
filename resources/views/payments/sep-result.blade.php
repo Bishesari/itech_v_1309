@@ -3,16 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نتیجه تست SEP</title>
+    <title>نتیجه پرداخت SEP</title>
 </head>
 <body>
-<h1>نتیجه بازگشت از درگاه</h1>
+<h1>نتیجه پرداخت</h1>
 
-@if ($callbackReceived)
-    <p>درخواست بازگشت دریافت شد.</p>
+@if ($paymentStatus === 'paid')
+    <p>پرداخت با موفقیت تأیید شد.</p>
+@elseif ($paymentStatus === 'pending')
+    <p>
+        تأیید پرداخت هنوز کامل نشده است.
+        لطفاً از پرداخت مجدد خودداری کنید و وضعیت تراکنش را بررسی کنید.
+    </p>
+@else
+    <p>
+        پرداخت تأیید نشد. اگر مبلغی از حساب شما کسر شده است،
+        پیش از تلاش مجدد وضعیت تراکنش را بررسی کنید.
+    </p>
 @endif
 
-<p>وضعیت داخلی پرداخت: {{ $paymentStatus }}</p>
-<p>این نتیجه به معنی تأیید پرداخت نیست.</p>
+<a href="{{ route('payments.sep-test') }}">
+    بازگشت به صفحه تست
+</a>
 </body>
 </html>
