@@ -111,6 +111,25 @@ class SepPaymentGateway
             );
         }
 
+        if (
+            ($result['Success'] ?? false) !== true
+            || (int) ($result['ResultCode'] ?? -1) !== 0
+        ) {
+            throw new RuntimeException(
+                'SEP verification unsuccessful. ResultCode: '
+                .($result['ResultCode'] ?? 'unknown').'.'
+            );
+        }
+
+        if (
+            ! isset($result['TransactionDetail'])
+            || ! is_array($result['TransactionDetail'])
+        ) {
+            throw new RuntimeException(
+                'SEP verification response is missing TransactionDetail.'
+            );
+        }
+
         return $result;
     }
 }
