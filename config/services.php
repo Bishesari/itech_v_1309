@@ -65,4 +65,37 @@ return [
         'line_number' => env('SMS_IR_LINE_NUMBER'),
     ],
 
+    'sep' => [
+        'terminal_id' => env('SEP_TERMINAL_ID'),
+
+        'token_url' => env(
+            'SEP_TOKEN_URL',
+            'https://sep.shaparak.ir/onlinepg/onlinepg'
+        ),
+
+        'payment_url' => env(
+            'SEP_PAYMENT_URL',
+            'https://sep.shaparak.ir/OnlinePG/OnlinePG'
+        ),
+
+        'send_token_url' => env(
+            'SEP_SEND_TOKEN_URL',
+            'https://sep.shaparak.ir/OnlinePG/SendToken'
+        ),
+
+        'verify_url' => env(
+            'SEP_VERIFY_URL',
+            'https://sep.shaparak.ir/verifyTxnRandomSessionkey/ipg/VerifyTransaction'
+        ),
+
+        'reverse_url' => env(
+            'SEP_REVERSE_URL',
+            'https://sep.shaparak.ir/verifyTxnRandomSessionkey/ipg/ReverseTransaction'
+        ),
+
+        'connect_timeout' => (int) env('SEP_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('SEP_TIMEOUT', 15),
+    ],
+
+
 ];

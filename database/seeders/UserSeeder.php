@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'person_id' => 2,
-                'password' => '123',
+                'password' => '14611461',
             ],
         );
     }

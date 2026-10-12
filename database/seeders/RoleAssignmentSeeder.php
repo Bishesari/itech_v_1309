@@ -30,5 +30,20 @@ class RoleAssignmentSeeder extends Seeder
                 'is_active' => true,
             ],
         );
+
+        $person = Person::where('identity', '3500984886')->firstOrFail();
+
+        // تخصیص نقش مستقل از شعبه
+        RoleAssignment::updateOrCreate(
+            [
+                'person_id' => $person->id,
+                'role_id' => 2,
+                'membership_id' => null,
+            ],
+            [
+                'is_active' => true,
+            ],
+        );
+
     }
 }
