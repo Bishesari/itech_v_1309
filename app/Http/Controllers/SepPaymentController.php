@@ -66,96 +66,114 @@ class SepPaymentController extends Controller
         }
     }
 
-    public function callback(
-        Request $request,
-        SepPaymentGateway $gateway,
-    ): View {
-        $resNum = trim((string) $request->input('ResNum', ''));
-        $refNum = trim((string) $request->input('RefNum', ''));
-        $state = strtoupper(
-            trim((string) $request->input('State', ''))
-        );
-
-        $callbackStatus = (int) $request->input('Status', 0);
-        if (
-            $resNum === ''
-            || $refNum === ''
-            || $state !== 'OK'
-            || $callbackStatus !== 2
-        ) {
-            return view('payments.sep-result', [
-                'callbackReceived' => true,
-                'paymentStatus' => 'failed',
-            ]);
-        }
-
-
-        try {
-            $status = DB::transaction(function () use (
-                $resNum,
-                $refNum,
-                $gateway,
-            ): string {
-                $payment = Payment::query()
-                    ->where('res_num', $resNum)
-                    ->where('gateway', 'sep')
-                    ->lockForUpdate()
-                    ->first();
-
-                if (! $payment) {
-                    return 'failed';
-                }
-
-                // Callback تکراری نباید پرداخت را دوباره تأیید کند.
-                if ($payment->isPaid()) {
-                    return $payment->gateway_reference === $refNum
-                        ? 'paid'
-                        : 'pending';
-                }
-
-                if ($payment->status !== Payment::STATUS_PENDING) {
-                    return 'failed';
-                }
-
-                $verification = $gateway->verifyTransaction($refNum);
-
-                $detail = $verification['TransactionDetail'] ?? null;
-
-                $valid = ($verification['Success'] ?? false) === true
-                    && (int) ($verification['ResultCode'] ?? -1) === 0
-                    && is_array($detail)
-                    && (string) ($detail['RefNum'] ?? '') === $refNum
-                    && (int) ($detail['OrginalAmount'] ?? 0) === $payment->amount
-                    && (int) ($detail['AffectiveAmount'] ?? 0) === $payment->amount
-                    && (int) ($detail['TerminalNumber'] ?? 0)
-                    === (int) config('services.sep.terminal_id');
-
-                if (! $valid) {
-                    // پاسخ نامعتبر یا غیرمنتظره لزوماً به معنی شکست قطعی پرداخت نیست.
-                    return 'pending';
-                }
-
-
-
-                $payment->update([
-                    'status' => Payment::STATUS_PAID,
-                    'gateway_reference' => $refNum,
-                    'verified_at' => now(),
-                ]);
-
-                return 'paid';
-            });
-        } catch (Throwable $exception) {
-            report($exception);
-
-            // در صورت خطای ارتباط با SEP، پرداخت را خودکار failed نمی‌کنیم؛
-            // ممکن است تراکنش انجام شده باشد و نیاز به بررسی مجدد داشته باشد.
-            $status = 'pending';
-        }
+    public function callback(Request $request, SepPaymentGateway $gateway): View
+    {
+        \Log::info('CB:begin', [
+            'auth' => auth()->check(),
+            'uid' => auth()->id(),
+            'sid' => $request->session()->getId(),
+        ]);
 
         return view('payments.sep-result', [
             'callbackReceived' => true,
-            'paymentStatus' => $status,
+            'paymentStatus' => 'pending',
         ]);
     }
+
+
+
+//
+//
+//    public function callback(
+//        Request $request,
+//        SepPaymentGateway $gateway,
+//    ): View {
+//        $resNum = trim((string) $request->input('ResNum', ''));
+//        $refNum = trim((string) $request->input('RefNum', ''));
+//        $state = strtoupper(
+//            trim((string) $request->input('State', ''))
+//        );
+//
+//        $callbackStatus = (int) $request->input('Status', 0);
+//        if (
+//            $resNum === ''
+//            || $refNum === ''
+//            || $state !== 'OK'
+//            || $callbackStatus !== 2
+//        ) {
+//            return view('payments.sep-result', [
+//                'callbackReceived' => true,
+//                'paymentStatus' => 'failed',
+//            ]);
+//        }
+//
+//
+//        try {
+//            $status = DB::transaction(function () use (
+//                $resNum,
+//                $refNum,
+//                $gateway,
+//            ): string {
+//                $payment = Payment::query()
+//                    ->where('res_num', $resNum)
+//                    ->where('gateway', 'sep')
+//                    ->lockForUpdate()
+//                    ->first();
+//
+//                if (! $payment) {
+//                    return 'failed';
+//                }
+//
+//                // Callback تکراری نباید پرداخت را دوباره تأیید کند.
+//                if ($payment->isPaid()) {
+//                    return $payment->gateway_reference === $refNum
+//                        ? 'paid'
+//                        : 'pending';
+//                }
+//
+//                if ($payment->status !== Payment::STATUS_PENDING) {
+//                    return 'failed';
+//                }
+//
+//                $verification = $gateway->verifyTransaction($refNum);
+//
+//                $detail = $verification['TransactionDetail'] ?? null;
+//
+//                $valid = ($verification['Success'] ?? false) === true
+//                    && (int) ($verification['ResultCode'] ?? -1) === 0
+//                    && is_array($detail)
+//                    && (string) ($detail['RefNum'] ?? '') === $refNum
+//                    && (int) ($detail['OrginalAmount'] ?? 0) === $payment->amount
+//                    && (int) ($detail['AffectiveAmount'] ?? 0) === $payment->amount
+//                    && (int) ($detail['TerminalNumber'] ?? 0)
+//                    === (int) config('services.sep.terminal_id');
+//
+//                if (! $valid) {
+//                    // پاسخ نامعتبر یا غیرمنتظره لزوماً به معنی شکست قطعی پرداخت نیست.
+//                    return 'pending';
+//                }
+//
+//
+//
+//                $payment->update([
+//                    'status' => Payment::STATUS_PAID,
+//                    'gateway_reference' => $refNum,
+//                    'verified_at' => now(),
+//                ]);
+//
+//                return 'paid';
+//            });
+//        } catch (Throwable $exception) {
+//            report($exception);
+//
+//            // در صورت خطای ارتباط با SEP، پرداخت را خودکار failed نمی‌کنیم؛
+//            // ممکن است تراکنش انجام شده باشد و نیاز به بررسی مجدد داشته باشد.
+//            $status = 'pending';
+//        }
+//
+//        return view('payments.sep-result', [
+//            'callbackReceived' => true,
+//            'paymentStatus' => $status,
+//        ]);
+//    }
 }

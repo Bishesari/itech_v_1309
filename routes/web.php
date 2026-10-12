@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::livewire('/', 'pages::home')->name('home');
 
 Route::middleware('auth')->group(function () {
+
     // صفحه انتخاب نقش (برای کاربر چندنقشه وقتی context ندارد)
     Route::livewire('/role-selection', 'pages::auth.select-context')->name('role-selection');
 
@@ -31,10 +32,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 // این مسیر باید از سمت درگاه قابل دسترسی باشد.
-Route::post('/payments/sep/callback', [
-    SepPaymentController::class,
-    'callback',
-])->name('payments.sep.callback');
+Route::match(['get', 'post'], '/payments/sep/callback', [SepPaymentController::class, 'callback'])->name('payments.sep.callback');
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
