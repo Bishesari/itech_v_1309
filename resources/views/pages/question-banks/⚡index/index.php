@@ -17,7 +17,7 @@ class extends Component
     public function products(): LengthAwarePaginator
     {
         return Product::query()
-            ->where('type', ProductType::StandardQuestionBank->value)
+            ->where('type', ProductType::WrittenSampleQuestion->value)
             ->where('is_active', true)
             ->whereHas('standards', fn ($query) => $query->where('is_active', true))
             ->with([

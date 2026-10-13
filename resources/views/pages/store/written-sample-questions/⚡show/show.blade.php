@@ -1,0 +1,4 @@
+
+<div>
+    {{$product->title}}
+</div>

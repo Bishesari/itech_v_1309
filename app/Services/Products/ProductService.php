@@ -14,7 +14,7 @@ class ProductService
     {
         $standardIds = array_values(array_unique(array_map('intval', $standardIds)));
 
-        if ($product->type === ProductType::StandardQuestionBank) {
+        if ($product->type === ProductType::WrittenSampleQuestion) {
             if (count($standardIds) !== 1) {
                 throw ValidationException::withMessages([
                     'standard_ids' => 'محصول بانک سؤال باید دقیقاً به یک استاندارد متصل باشد.',
