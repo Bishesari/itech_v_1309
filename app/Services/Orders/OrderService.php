@@ -2,10 +2,12 @@
 
 namespace App\Services\Orders;
 
+use App\Enums\ProductType;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class OrderService
@@ -47,10 +49,15 @@ class OrderService
 
             $price = $prices->first();
             $amount = (int) $price->amount;
+            if ($amount < 1) {
+                throw ValidationException::withMessages([
+                    'product' => 'قیمت محصول معتبر نیست.',
+                ]);
+            }
 
             $metadata = [];
 
-            if ($product->type === 'standard_question_bank') {
+            if ($product->type === ProductType::StandardQuestionBank) {
                 $standards = $product->standards;
 
                 if ($standards->count() !== 1) {
@@ -59,7 +66,15 @@ class OrderService
                     ]);
                 }
 
-                $standard = $standards->first();
+                $standard = $product->standards()
+                    ->where('is_active', true)
+                    ->first();
+
+                if (! $standard) {
+                    throw ValidationException::withMessages([
+                        'product' => 'استاندارد متصل به این محصول فعال یا معتبر نیست.',
+                    ]);
+                }
 
                 $metadata['standard_id'] = $standard->id;
                 $metadata['standard_code'] = $standard->code;
@@ -68,9 +83,7 @@ class OrderService
 
             $order = Order::create([
                 'user_id' => $user->id,
-                'order_number' => 'ORD'
-                    . now()->format('YmdHis')
-                    . strtoupper(\Illuminate\Support\Str::random(8)),
+                'order_number' => 'ORD-'.Str::ulid(),
                 'status' => 'pending',
                 'total_amount' => $amount,
             ]);
@@ -78,7 +91,7 @@ class OrderService
             $order->items()->create([
                 'product_id' => $product->id,
                 'product_title' => $product->title,
-                'product_type' => $product->type,
+                'product_type' => $product->type->value,
                 'quantity' => 1,
                 'unit_amount' => $amount,
                 'total_amount' => $amount,

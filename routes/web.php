@@ -47,6 +47,9 @@ Route::post(
 )->name('payments.sep.callback');
 
 
+Route::livewire('/question-banks', 'pages::question-banks.index')->name('question-banks.index');
+Route::livewire('/question-banks/{product:slug}', 'pages::question-banks.show')->name('question-banks.show');
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/store.php';

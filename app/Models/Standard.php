@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\ProductType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Standard extends Model
 {
@@ -50,5 +52,23 @@ class Standard extends Model
     {
         return $this->belongsToMany(Product::class)
             ->withTimestamps();
+    }
+
+    public function questionBankProducts(): BelongsToMany
+    {
+        return $this->products()
+            ->where('products.type', ProductType::StandardQuestionBank->value);
+    }
+
+    public function questions(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Question::class,
+            Chapter::class,
+            'standard_id',
+            'chapter_id',
+            'id',
+            'id',
+        );
     }
 }
