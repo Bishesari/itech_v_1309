@@ -17,6 +17,11 @@ return new class extends Migration
                 ->constrained()
                 ->restrictOnDelete();
 
+            $table->foreignId('order_id')
+                ->nullable()
+                ->constrained()
+                ->restrictOnDelete();
+
             // Amount in Iranian Rials
             $table->unsignedBigInteger('amount');
 

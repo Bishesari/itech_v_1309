@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('fields', function (Blueprint $table) {
             $table->id();
-            $table->string('title', 40)->unique();
+            $table->string('title', 60)->unique();
+            $table->string('slug', 80)->unique();
+            $table->boolean('is_active')->default(true)->index();
             $table->timestamps();
         });
     }

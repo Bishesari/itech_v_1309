@@ -20,6 +20,16 @@ Route::middleware('auth')->group(function () {
         'requestToken',
     ])->name('payments.sep-test.token');
 
+    Route::post('/orders/{order}/pay', [
+        SepPaymentController::class,
+        'payOrder',
+    ])->name('orders.pay');
+
+    Route::post('/products/{product}/buy', [
+        SepPaymentController::class,
+        'buyProduct',
+    ])->name('products.buy');
+
 
     Route::middleware('role.context')->group(function () {
         Route::get('dashboard', function (CurrentRoleContextService $contextService) {
@@ -39,7 +49,7 @@ Route::post(
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
-
+require __DIR__.'/store.php';
 
 
 

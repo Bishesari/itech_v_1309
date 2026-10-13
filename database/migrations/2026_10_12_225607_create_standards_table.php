@@ -25,8 +25,8 @@ return new class extends Migration
             $table->decimal('amali_h', 5, 1)->default(0);
             $table->decimal('karvarzi_h', 5, 1)->default(0);
             $table->decimal('project_h', 5, 1)->default(0);
-            $table->decimal('required_h', 5, 1)->default(0);
             $table->decimal('sum_h', 6, 1)->default(0);
+            $table->decimal('required_h', 5, 1)->default(0);
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();

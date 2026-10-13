@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\Payment;
+use App\Models\Product;
+use App\Services\Orders\OrderService;
+use App\Services\Payments\CompleteOrderPaymentService;
+use App\Services\Payments\OrderPaymentService;
 use App\Services\Payments\SepPaymentGateway;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Throwable;
@@ -17,7 +21,12 @@ class SepPaymentController extends Controller
 
     public function show(): View
     {
-        return view('payments.sep-test');
+        $product = Product::query()
+            ->where('slug', 'sep-payment-test')
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return view('payments.sep-test', compact('product'));
     }
 
     public function requestToken(
@@ -69,6 +78,7 @@ class SepPaymentController extends Controller
     public function callback(
         Request $request,
         SepPaymentGateway $gateway,
+        CompleteOrderPaymentService $completionService,
     ): View {
         $resNum = trim((string) $request->input('ResNum', ''));
         $refNum = trim((string) $request->input('RefNum', ''));
@@ -140,46 +150,11 @@ class SepPaymentController extends Controller
             }
 
             // ثبت نتیجه با قفل رکورد برای جلوگیری از پردازش هم‌زمان
-            $status = DB::transaction(function () use ($resNum, $refNum): string {
-                $payment = Payment::query()
-                    ->where('res_num', $resNum)
-                    ->where('gateway', 'sep')
-                    ->lockForUpdate()
-                    ->first();
 
-                if (! $payment) {
-                    return 'failed';
-                }
-
-                // ممکن است Callback دیگری زودتر این پرداخت را ثبت کرده باشد.
-                if ($payment->isPaid()) {
-                    return $payment->gateway_reference === $refNum
-                        ? 'paid'
-                        : 'pending';
-                }
-
-                if ($payment->status !== Payment::STATUS_PENDING) {
-                    return 'failed';
-                }
-
-                // شماره مرجع نباید متعلق به پرداخت دیگری باشد.
-                $referenceAlreadyUsed = Payment::query()
-                    ->where('gateway_reference', $refNum)
-                    ->where('id', '!=', $payment->id)
-                    ->exists();
-
-                if ($referenceAlreadyUsed) {
-                    return 'pending';
-                }
-
-                $payment->update([
-                    'status' => Payment::STATUS_PAID,
-                    'gateway_reference' => $refNum,
-                    'verified_at' => now(),
-                ]);
-
-                return 'paid';
-            });
+            $status = $completionService->complete(
+                paymentId: (int) $payment->id,
+                refNum: $refNum,
+            );
         } catch (Throwable $exception) {
             report($exception);
 
@@ -192,4 +167,106 @@ class SepPaymentController extends Controller
             'paymentStatus' => $status,
         ]);
     }
+
+
+    public function payOrder(
+        Request $request,
+        Order $order,
+        OrderPaymentService $paymentService,
+        SepPaymentGateway $gateway,
+    ): RedirectResponse {
+        $payment = $paymentService->prepare(
+            $request->user(),
+            (int) $order->getKey(),
+        );
+
+        return $this->redirectToSep($payment, $gateway);
+    }
+
+    public function buyProduct(
+        Request $request,
+        Product $product,
+        OrderService $orderService,
+        OrderPaymentService $paymentService,
+        SepPaymentGateway $gateway,
+    ): RedirectResponse {
+        $order = $orderService->createForProduct(
+            $request->user(),
+            (int) $product->getKey(),
+        );
+
+        $payment = $paymentService->prepare(
+            $request->user(),
+            (int) $order->getKey(),
+        );
+
+        return $this->redirectToSep($payment, $gateway);
+    }
+
+    private function redirectToSep(
+        Payment $payment,
+        SepPaymentGateway $gateway,
+    ): RedirectResponse {
+        $paymentUrl = rtrim(
+            (string) config('services.sep.send_token_url'),
+            '/',
+        );
+
+        $token = null;
+
+        try {
+            if (blank($paymentUrl)) {
+                throw new \RuntimeException(
+                    'SEP payment URL is not configured.',
+                );
+            }
+
+            $token = $gateway->requestToken(
+                amount: (int) $payment->amount,
+                resNum: $payment->res_num,
+                redirectUrl: route('payments.sep.callback'),
+            );
+
+            // فقط وقتی توکن ذخیره می‌شود که پرداخت هنوز
+            // در انتظار باشد و قبلاً توکنی نداشته باشد.
+            $updated = Payment::query()
+                ->whereKey($payment->id)
+                ->where('status', Payment::STATUS_PENDING)
+                ->whereNull('gateway_token')
+                ->update([
+                    'gateway_token' => $token,
+                ]);
+
+            if ($updated !== 1) {
+                throw new \RuntimeException(
+                    'Payment state changed before the SEP token could be saved.',
+                );
+            }
+
+            return redirect()->away(
+                $paymentUrl.'?token='.urlencode($token),
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            // فقط اگر هنوز توکنی از SEP دریافت نشده، می‌توانیم
+            // خطای آماده‌سازی را با اطمینان بیشتری ثبت کنیم.
+            if ($token === null) {
+                Payment::query()
+                    ->whereKey($payment->id)
+                    ->where('status', Payment::STATUS_PENDING)
+                    ->whereNull('gateway_token')
+                    ->update([
+                        'status' => Payment::STATUS_FAILED,
+                    ]);
+            }
+
+            return redirect()
+                ->route('dashboard')
+                ->withErrors([
+                    'payment' => 'آماده‌سازی پرداخت کامل نشد. وضعیت پرداخت باید بررسی شود.',
+                ]);
+        }
+    }
+
 }

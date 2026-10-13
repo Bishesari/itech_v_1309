@@ -13,6 +13,7 @@ class Payment extends Model
 
     protected $fillable = [
         'user_id',
+        'order_id',
         'amount',
         'status',
         'gateway',
@@ -38,5 +39,9 @@ class Payment extends Model
     public function isPaid(): bool
     {
         return $this->status === self::STATUS_PAID;
+    }
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
     }
 }

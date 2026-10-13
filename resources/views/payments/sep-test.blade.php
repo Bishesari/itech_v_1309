@@ -22,9 +22,10 @@
 <p style="color: red">{{ $message }}</p>
 @enderror
 
+
 <form
     method="POST"
-    action="{{ route('payments.sep-test.token') }}"
+    action="{{ route('products.buy', ['product' => $product]) }}"
     autocomplete="off"
 >
     @csrf
@@ -33,5 +34,6 @@
         پرداخت ۱۰۰٬۰۰۰ ریال
     </button>
 </form>
+
 </body>
 </html>

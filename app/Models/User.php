@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -72,5 +73,10 @@ class User extends Authenticatable implements PasskeyUser
         }
 
         return mb_strtoupper(mb_substr($this->username, 0, 2));
+    }
+
+    public function productAccesses(): HasMany
+    {
+        return $this->hasMany(ProductAccess::class);
     }
 }

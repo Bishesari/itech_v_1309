@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Standard extends Model
@@ -17,8 +18,8 @@ class Standard extends Model
         'amali_h',
         'karvarzi_h',
         'project_h',
-        'required_h',
         'sum_h',
+        'required_h',
         'is_active',
     ];
 
@@ -29,8 +30,8 @@ class Standard extends Model
             'amali_h' => 'decimal:1',
             'karvarzi_h' => 'decimal:1',
             'project_h' => 'decimal:1',
-            'required_h' => 'decimal:1',
             'sum_h' => 'decimal:1',
+            'required_h' => 'decimal:1',
             'is_active' => 'boolean',
         ];
     }
@@ -43,5 +44,11 @@ class Standard extends Model
     public function chapters(): HasMany
     {
         return $this->hasMany(Chapter::class)->orderBy('number');
+    }
+
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class)
+            ->withTimestamps();
     }
 }
