@@ -70,8 +70,8 @@
 
         <div class="space-x-1 text-sm text-center rtl:space-x-reverse text-zinc-600 dark:text-zinc-400">
             <span>{{ __('هنوز ثبت نام نکرده اید؟') }}</span>
-
-            <flux:link :href="route('register')" wire:navigate x-data="{ loading: false }" class="mr-2"
+            <flux:link :href="route('register', request()->query('redirect') ? ['redirect' => request()->query('redirect')] : [])"
+                       wire:navigate x-data="{ loading: false }" class="mr-2"
                        @click="loading = true">
                 <span x-show="!loading">{{ __('ثبت نام کنید.') }} </span>
                 <flux:icon.loading x-show="loading" class="inline size-4 text-yellow-500 mr-10"/>

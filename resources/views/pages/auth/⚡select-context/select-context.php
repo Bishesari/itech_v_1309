@@ -99,6 +99,22 @@ class extends Component
             (int) $validated['selectedAssignmentId'],
         );
 
+        $destination = session()->pull(
+            'auth.after_role_selection_redirect',
+        );
+
+        if (
+            is_string($destination)
+            && preg_match(
+                '#^/store/written-sample-questions/[a-zA-Z0-9_-]+/?$#',
+                $destination,
+            )
+        ) {
+            $this->redirect($destination, navigate: true);
+
+            return;
+        }
+
         $this->redirectRoute('dashboard', navigate: true);
     }
 };

@@ -46,6 +46,11 @@ class extends Component
 
     public ?string $fingerprint = null;
 
+    public function mount(): void
+    {
+        $this->preserveRedirect();
+    }
+
     protected array $normalizers = [
         'first_name_fa' => [PersianText::class, 'name'],
         'last_name_fa' => [PersianText::class, 'name'],
@@ -101,6 +106,32 @@ class extends Component
                 'starts_with:09',
             ],
         ];
+    }
+
+    protected function preserveRedirect(): void
+    {
+        session()->forget('auth.after_role_selection_redirect');
+
+        $redirect = request()->query('redirect');
+
+        if (! is_string($redirect)) {
+            return;
+        }
+
+        $path = parse_url($redirect, PHP_URL_PATH);
+
+        if (
+            is_string($path)
+            && preg_match(
+                '#^/store/written-sample-questions/[a-zA-Z0-9_-]+/?$#',
+                $path,
+            )
+        ) {
+            session()->put(
+                'auth.after_role_selection_redirect',
+                $path,
+            );
+        }
     }
 
     public function continueRegister(VerificationChallengeService $service): void
@@ -247,6 +278,22 @@ class extends Component
         request()->session()->regenerate();
 
         $this->modal('verify-otp')->close();
+
+        $destination = session()->pull(
+            'auth.after_role_selection_redirect',
+        );
+
+        if (
+            is_string($destination)
+            && preg_match(
+                '#^/store/written-sample-questions/[a-zA-Z0-9_-]+/?$#',
+                $destination,
+            )
+        ) {
+            $this->redirect($destination);
+
+            return;
+        }
 
         $this->redirectRoute('dashboard');
     }
