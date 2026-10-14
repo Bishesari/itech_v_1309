@@ -57,7 +57,7 @@ class Standard extends Model
     public function questionBankProducts(): BelongsToMany
     {
         return $this->products()
-            ->where('products.type', ProductType::StandardQuestionBank->value);
+            ->where('products.type', ProductType::WrittenSampleQuestion->value);
     }
 
     public function questions(): HasManyThrough

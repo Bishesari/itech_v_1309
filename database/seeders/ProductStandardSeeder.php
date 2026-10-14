@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\ProductStandard;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class ProductStandardSeeder extends Seeder
@@ -17,6 +16,7 @@ class ProductStandardSeeder extends Seeder
             'product_id' => 1,
             'standard_id' => 1,
         ]);
+
         ProductStandard::query()->create([
             'product_id' => 2,
             'standard_id' => 2,

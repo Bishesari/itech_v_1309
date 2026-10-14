@@ -14,9 +14,9 @@ class ProductSeeder extends Seeder
     {
         $products = [
             [
-                'title' => 'بانک سؤالات استاندارد Laravel',
-                'slug' => 'laravel-standard-question-bank',
-                'type' => 'standard_question_bank',
+                'title' => 'نمونه سوالات پرتکرار لاراول',
+                'slug' => 'laravel-frequently-final-questions',
+                'type' => 'written_sample_question',
                 'short_description' => 'نمونه سؤالات استاندارد ساخت برنامه‌های وب با Laravel',
                 'description' => null,
                 'seo_title' => 'بانک سؤالات استاندارد Laravel',

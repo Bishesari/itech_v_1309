@@ -57,7 +57,7 @@ class OrderService
 
             $metadata = [];
 
-            if ($product->type === ProductType::StandardQuestionBank) {
+            if ($product->type === ProductType::WrittenSampleQuestion) {
                 $standards = $product->standards;
 
                 if ($standards->count() !== 1) {

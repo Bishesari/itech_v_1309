@@ -46,9 +46,9 @@ class Product extends Model
         return $this->hasMany(ProductAccess::class);
     }
 
-    public function isStandardQuestionBank(): bool
+    public function isWrittenSampleQuestion(): bool
     {
-        return $this->type === ProductType::StandardQuestionBank;
+        return $this->type === ProductType::WrittenSampleQuestion;
     }
 
     public function currentPrice(?CarbonInterface $at = null): ?ProductPrice
