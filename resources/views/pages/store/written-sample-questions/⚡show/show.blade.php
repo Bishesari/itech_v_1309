@@ -150,20 +150,26 @@
 
                 @if ($price && $price->amount > 0)
                     @auth
+                        ```blade
                         <form
                             method="POST"
                             action="{{ route('products.buy', ['product' => $product->getKey()]) }}"
                             class="mt-8"
+                            x-data="{ submitting: false }"
+                            @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
                         >
                             @csrf
 
                             <button
                                 type="submit"
-                                class="w-full rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+                                :disabled="submitting"
+                                class="w-full rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-zinc-900"
                             >
-                                خرید محصول
+                                <span x-show="!submitting">خرید محصول</span>
+                                <span x-cloak x-show="submitting">در حال انتقال به درگاه پرداخت...</span>
                             </button>
                         </form>
+                        ```
                     @else
                         <a href="{{ route('login', ['redirect' => route('store.written-sample-questions.show', ['product' => $product->slug]),]) }}"
                            class="mt-8 block w-full rounded-xl bg-sky-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"

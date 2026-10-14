@@ -60,17 +60,17 @@ class SepPaymentController extends Controller
             ).'?token='.urlencode($token);
 
             return redirect()->away($paymentUrl);
+
         } catch (Throwable $exception) {
             report($exception);
 
-            $payment->update([
-                'status' => Payment::STATUS_FAILED,
-            ]);
+            // خطای شبکه به‌تنهایی شکست قطعی پرداخت را ثابت نمی‌کند.
+            // وضعیت پرداخت را pending نگه می‌داریم تا بررسی شود.
 
             return redirect()
                 ->route('payments.sep-test')
                 ->withErrors([
-                    'payment' => 'آماده‌سازی پرداخت ناموفق بود. لطفاً گزارش خطا را بررسی کنید.',
+                    'payment' => 'پاسخ قطعی از درگاه دریافت نشد. وضعیت درخواست باید بررسی شود؛ لطفاً پرداخت جدیدی ایجاد نکنید.',
                 ]);
         }
     }
@@ -168,7 +168,6 @@ class SepPaymentController extends Controller
         ]);
     }
 
-
     public function payOrder(
         Request $request,
         Order $order,
@@ -212,34 +211,85 @@ class SepPaymentController extends Controller
             '/',
         );
 
-        $token = null;
-
         try {
             if (blank($paymentUrl)) {
                 throw new \RuntimeException(
-                    'SEP payment URL is not configured.',
+                    'SEP payment URL is not configured.'
                 );
             }
 
+            // پرداخت باید همچنان در انتظار باشد.
+            $payment->refresh();
+
+            if ($payment->status !== Payment::STATUS_PENDING) {
+                throw new \RuntimeException(
+                    'Payment is no longer pending.'
+                );
+            }
+
+            // اگر توکن قبلاً ذخیره شده، همان را استفاده می‌کنیم.
+            if (filled($payment->gateway_token)) {
+                return redirect()->away(
+                    $paymentUrl.'?token='
+                    .urlencode($payment->gateway_token),
+                );
+            }
+
+            // شناسه مالکیت درخواست صدور توکن
+            $requestKey = (string) Str::uuid();
+
+            // فقط یک درخواست می‌تواند قفل را دریافت کند.
+            $claimed = Payment::query()
+                ->whereKey($payment->id)
+                ->where('status', Payment::STATUS_PENDING)
+                ->whereNull('gateway_token')
+                ->whereNull('token_request_key')
+                ->update([
+                    'token_request_key' => $requestKey,
+                ]);
+
+            if ($claimed !== 1) {
+                $payment->refresh();
+
+                // شاید درخواست هم‌زمان توکن را ذخیره کرده باشد.
+                if (
+                    $payment->status === Payment::STATUS_PENDING
+                    && filled($payment->gateway_token)
+                ) {
+                    return redirect()->away(
+                        $paymentUrl.'?token='
+                        .urlencode($payment->gateway_token),
+                    );
+                }
+
+                return redirect()
+                    ->route('dashboard')
+                    ->withErrors([
+                        'payment' => 'درخواست پرداخت قبلی در حال بررسی است. برای جلوگیری از پرداخت تکراری، درخواست جدیدی ارسال نشد.',
+                    ]);
+            }
+
+            // درخواست شبکه‌ای خارج از تراکنش دیتابیس اجرا می‌شود.
             $token = $gateway->requestToken(
                 amount: (int) $payment->amount,
                 resNum: $payment->res_num,
                 redirectUrl: route('payments.sep.callback'),
             );
 
-            // فقط وقتی توکن ذخیره می‌شود که پرداخت هنوز
-            // در انتظار باشد و قبلاً توکنی نداشته باشد.
+            // توکن فقط توسط مالک قفل ثبت می‌شود.
             $updated = Payment::query()
                 ->whereKey($payment->id)
                 ->where('status', Payment::STATUS_PENDING)
                 ->whereNull('gateway_token')
+                ->where('token_request_key', $requestKey)
                 ->update([
                     'gateway_token' => $token,
+                    'token_request_key' => null,
                 ]);
 
             if ($updated !== 1) {
                 throw new \RuntimeException(
-                    'Payment state changed before the SEP token could be saved.',
+                    'SEP token was received but could not be saved safely.'
                 );
             }
 
@@ -249,24 +299,13 @@ class SepPaymentController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            // فقط اگر هنوز توکنی از SEP دریافت نشده، می‌توانیم
-            // خطای آماده‌سازی را با اطمینان بیشتری ثبت کنیم.
-            if ($token === null) {
-                Payment::query()
-                    ->whereKey($payment->id)
-                    ->where('status', Payment::STATUS_PENDING)
-                    ->whereNull('gateway_token')
-                    ->update([
-                        'status' => Payment::STATUS_FAILED,
-                    ]);
-            }
-
+            // عمداً وضعیت پرداخت را failed نمی‌کنیم.
+            // ممکن است SEP توکن صادر کرده باشد، اما پاسخ به ما نرسیده باشد.
             return redirect()
                 ->route('dashboard')
                 ->withErrors([
-                    'payment' => 'آماده‌سازی پرداخت کامل نشد. وضعیت پرداخت باید بررسی شود.',
+                    'payment' => 'آماده‌سازی پرداخت کامل نشد. برای جلوگیری از پرداخت تکراری، وضعیت درخواست باید بررسی شود.',
                 ]);
         }
     }
-
 }

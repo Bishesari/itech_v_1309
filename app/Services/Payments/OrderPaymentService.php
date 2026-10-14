@@ -19,7 +19,7 @@ class OrderPaymentService
                 ->lockForUpdate()
                 ->first();
 
-            if (! $order || $order->user_id !== $user->id) {
+            if (! $order || (int) $order->user_id !== (int) $user->id) {
                 throw ValidationException::withMessages([
                     'order' => 'سفارش موردنظر یافت نشد.',
                 ]);
@@ -45,34 +45,39 @@ class OrderPaymentService
                 ]);
             }
 
-
-            $existingPayment = Payment::query()
+            // قفل و بررسی پرداخت‌های قبلی سفارش
+            $payments = Payment::query()
                 ->where('order_id', $order->id)
-                ->where('status', Payment::STATUS_PENDING)
+                ->orderByDesc('id')
                 ->lockForUpdate()
-                ->first();
+                ->get();
 
-
-            if ($existingPayment) {
-                if (filled($existingPayment->gateway_token)) {
-                    throw ValidationException::withMessages([
-                        'payment' => 'برای این سفارش یک پرداخت در انتظار وجود دارد. ابتدا وضعیت پرداخت قبلی باید مشخص شود.',
-                    ]);
-                }
-
-                if ($existingPayment->created_at->lte(now()->subMinutes(2))) {
-                    throw ValidationException::withMessages([
-                        'payment' => 'آماده‌سازی پرداخت قبلی بیش از حد طول کشیده است. ابتدا باید وضعیت آن بررسی شود.',
-                    ]);
-                }
-
+            // اگر قبلاً پرداخت موفقی ثبت شده، پرداخت جدید ممنوع است.
+            if ($payments->contains(
+                fn (Payment $payment) => $payment->status === Payment::STATUS_PAID
+            )) {
                 throw ValidationException::withMessages([
-                    'payment' => 'پرداخت قبلی در حال آماده‌سازی است. لطفاً کمی بعد دوباره تلاش کنید.',
+                    'payment' => 'برای این سفارش پرداخت موفق ثبت شده است؛ وضعیت سفارش باید بررسی شود.',
                 ]);
             }
 
+            // پرداخت در انتظار را بازیابی می‌کنیم؛ توکن جدید نمی‌سازیم.
+            $pendingPayment = $payments->first(
+                fn (Payment $payment) => $payment->status
+                    === Payment::STATUS_PENDING
+            );
 
+            if ($pendingPayment) {
+                if ((int) $pendingPayment->amount !== $amount) {
+                    throw ValidationException::withMessages([
+                        'payment' => 'مبلغ پرداخت قبلی با مبلغ سفارش مطابقت ندارد؛ ابتدا باید بررسی شود.',
+                    ]);
+                }
 
+                return $pendingPayment;
+            }
+
+            // اگر پرداخت در انتظار نداریم، فقط یک پرداخت جدید می‌سازیم.
             return Payment::query()->create([
                 'user_id' => $user->id,
                 'order_id' => $order->id,

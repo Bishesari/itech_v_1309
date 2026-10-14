@@ -37,6 +37,10 @@ return new class extends Migration
             $table->string('gateway_token')->nullable()->unique();
             $table->string('gateway_reference')->nullable()->unique();
 
+            $table->uuid('token_request_key')
+                ->nullable()
+                ->unique();
+
             // Set only after successful server-side verification
             $table->timestamp('verified_at')->nullable();
 
