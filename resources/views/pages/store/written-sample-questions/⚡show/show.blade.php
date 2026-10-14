@@ -148,26 +148,91 @@
 
                 </div>
 
+                @if ($receiptOrderNumber !== null)
+                    <section
+                        class="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900 dark:bg-emerald-950/30"
+                        aria-labelledby="payment-receipt-title"
+                    >
+                        <div class="flex items-center gap-2">
+                            <flux:icon.check-circle class="size-6 text-emerald-600" />
+
+                            <h2
+                                id="payment-receipt-title"
+                                class="text-lg font-semibold text-emerald-800 dark:text-emerald-300"
+                            >
+                                پرداخت با موفقیت انجام شد
+                            </h2>
+                        </div>
+
+                        <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+                            سفارش شما ثبت شده است. اطلاعات رسید پرداخت:
+                        </p>
+
+                        <dl class="mt-5 space-y-3 text-sm">
+                            <div class="flex flex-wrap justify-between gap-2">
+                                <dt class="text-zinc-500">شماره سفارش</dt>
+                                <dd class="font-medium" dir="ltr">
+                                    {{ $receiptOrderNumber }}
+                                </dd>
+                            </div>
+
+                            <div class="flex flex-wrap justify-between gap-2">
+                                <dt class="text-zinc-500">مبلغ پرداختی</dt>
+                                <dd class="font-semibold">
+                                    {{ number_format($receiptAmount) }} ریال
+                                </dd>
+                            </div>
+
+                            @if ($receiptReference)
+                                <div class="flex flex-wrap justify-between gap-2">
+                                    <dt class="text-zinc-500">شماره پیگیری درگاه</dt>
+                                    <dd class="font-normal text-xs" dir="ltr">
+                                        {{ $receiptReference }}
+                                    </dd>
+                                </div>
+                            @endif
+
+                            @if ($receiptPaidAt)
+                                <div class="flex flex-wrap justify-between gap-2">
+                                    <dt class="text-zinc-500">زمان پرداخت</dt>
+                                    <dd class="font-medium" dir="ltr">
+                                        {{ $receiptPaidAt }}
+                                    </dd>
+                                </div>
+                            @endif
+                        </dl>
+                    </section>
+                @endif
+
                 @if ($price && $price->amount > 0)
                     @auth
-                        <form
-                            method="POST"
-                            action="{{ route('products.buy', ['product' => $product->getKey()]) }}"
-                            class="mt-8"
-                            x-data="{ submitting: false }"
-                            @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
-                        >
-                            @csrf
-
-                            <button
-                                type="submit"
-                                :disabled="submitting"
-                                class="w-full rounded-xl bg-sky-600 px-5 py-3 font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-zinc-900"
+                        @if ($receiptOrderNumber !== null)
+                            <div class="mt-8 flex flex-wrap gap-3">
+                                <a
+                                    href="#product-content"
+                                    class="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-emerald-700"
+                                >
+                                    مشاهده محصول
+                                </a>
+                            </div>
+                        @else
+                            <form
+                                method="POST"
+                                action="{{ route('products.buy', ['product' => $product->getKey()]) }}"
+                                class="mt-8"
+                                x-data="{ submitting: false }"
+                                @submit="if (submitting) { $event.preventDefault(); return; } submitting = true"
                             >
-                                <span x-show="!submitting">خرید محصول</span>
-                                <span x-cloak x-show="submitting">در حال انتقال به درگاه پرداخت...</span>
-                            </button>
-                        </form>
+                                @csrf
+
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center justify-center rounded-lg bg-zinc-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                                >
+                                    خرید محصول
+                                </button>
+                            </form>
+                        @endif
                     @else
                         <a href="{{ route('login', ['redirect' => route('store.written-sample-questions.show', ['product' => $product->slug]),]) }}"
                            class="mt-8 block w-full rounded-xl bg-sky-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
