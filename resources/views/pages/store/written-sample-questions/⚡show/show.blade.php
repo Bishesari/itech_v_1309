@@ -165,12 +165,14 @@
                             </button>
                         </form>
                     @else
-                        <a
-                            href="{{ route('login') }}"
-                            class="mt-8 block w-full rounded-xl bg-sky-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
-                        >
-                            ورود برای خرید
-                        </a>
+
+                        @else
+                            <a href="{{ route('login', ['redirect' => route('store.written-sample-questions.show', ['product' => $product->slug]),]) }}"
+                                class="mt-8 block w-full rounded-xl bg-sky-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
+                            >
+                                ورود برای خرید
+                            </a>
+                        @endauth
                     @endauth
                 @else
                     <button

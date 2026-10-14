@@ -13,6 +13,13 @@
               @submit="loading = true"
         >
             @csrf
+            @if (is_string(request()->query('redirect')))
+                <input
+                    type="hidden"
+                    name="redirect"
+                    value="{{ request()->query('redirect') }}"
+                >
+            @endif
 
             {{-- نام کاربری --}}
             <flux:field>
