@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ProductType;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
@@ -79,7 +80,7 @@ class SepPaymentController extends Controller
         Request $request,
         SepPaymentGateway $gateway,
         CompleteOrderPaymentService $completionService,
-    ): View {
+    ): View|RedirectResponse {
         $resNum = trim((string) $request->input('ResNum', ''));
         $refNum = trim((string) $request->input('RefNum', ''));
         $state = strtoupper(trim((string) $request->input('State', '')));
@@ -114,13 +115,13 @@ class SepPaymentController extends Controller
 
             // Callback تکراری برای پرداخت تأییدشده
             if ($payment->isPaid()) {
-                $status = $payment->gateway_reference === $refNum
-                    ? 'paid'
-                    : 'pending';
+                if ($payment->gateway_reference === $refNum) {
+                    return $this->redirectAfterSuccessfulPayment($payment);
+                }
 
                 return view('payments.sep-result', [
                     'callbackReceived' => true,
-                    'paymentStatus' => $status,
+                    'paymentStatus' => 'pending',
                 ]);
             }
 
@@ -162,10 +163,66 @@ class SepPaymentController extends Controller
             $status = 'pending';
         }
 
+        if ($status === 'paid') {
+            $payment->refresh();
+
+            return $this->redirectAfterSuccessfulPayment($payment);
+        }
+
         return view('payments.sep-result', [
             'callbackReceived' => true,
             'paymentStatus' => $status,
         ]);
+    }
+
+    private function redirectAfterSuccessfulPayment(
+        Payment $payment,
+    ): RedirectResponse|View {
+        $order = Order::query()
+            ->whereKey($payment->order_id)
+            ->where('user_id', $payment->user_id)
+            ->where('status', 'paid')
+            ->first();
+
+        if (! $order) {
+            return view('payments.sep-result', [
+                'callbackReceived' => true,
+                'paymentStatus' => 'paid',
+            ]);
+        }
+
+        $item = $order->items()
+            ->where(
+                'product_type',
+                ProductType::WrittenSampleQuestion->value,
+            )
+            ->first();
+
+        if (! $item || ! $item->product_id) {
+            return view('payments.sep-result', [
+                'callbackReceived' => true,
+                'paymentStatus' => 'paid',
+            ]);
+        }
+
+        $product = Product::query()
+            ->whereKey($item->product_id)
+            ->first();
+
+        if (! $product) {
+            return view('payments.sep-result', [
+                'callbackReceived' => true,
+                'paymentStatus' => 'paid',
+            ]);
+        }
+
+        return redirect()->route(
+            'store.written-sample-questions.show',
+            [
+                'product' => $product->slug,
+                'order' => $order->order_number,
+            ],
+        );
     }
 
     public function payOrder(

@@ -41,9 +41,7 @@ Route::middleware('auth')->group(function () {
     });
 });
 // این مسیر باید از سمت درگاه قابل دسترسی باشد.
-Route::post(
-    '/payments/sep/callback',
-    [SepPaymentController::class, 'callback']
+Route::post('/payments/sep/callback', [SepPaymentController::class, 'callback']
 )->name('payments.sep.callback');
 
 

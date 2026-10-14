@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Enums\ProductType;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ProductAccess;
@@ -93,7 +94,7 @@ class CompleteOrderPaymentService
 
             // صدور دسترسی برای بانک سؤال؛ فقط یک بار برای هر قلم سفارش.
             foreach ($items as $item) {
-                if ($item->product_type !== 'standard_question_bank') {
+                if ($item->product_type !== ProductType::WrittenSampleQuestion->value) {
                     continue;
                 }
 
