@@ -150,7 +150,6 @@
 
                 @if ($price && $price->amount > 0)
                     @auth
-                        ```blade
                         <form
                             method="POST"
                             action="{{ route('products.buy', ['product' => $product->getKey()]) }}"
@@ -169,7 +168,6 @@
                                 <span x-cloak x-show="submitting">در حال انتقال به درگاه پرداخت...</span>
                             </button>
                         </form>
-                        ```
                     @else
                         <a href="{{ route('login', ['redirect' => route('store.written-sample-questions.show', ['product' => $product->slug]),]) }}"
                            class="mt-8 block w-full rounded-xl bg-sky-600 px-5 py-3 text-center font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-900"
