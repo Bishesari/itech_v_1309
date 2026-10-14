@@ -26,7 +26,7 @@ class ProductSeeder extends Seeder
             [
                 'title' => 'بانک سؤالات استاندارد Python',
                 'slug' => 'python-standard-question-bank',
-                'type' => 'standard_question_bank',
+                'type' => 'written_sample_question',
                 'short_description' => 'نمونه سؤالات استاندارد ساخت برنامه‌نویسی python',
                 'description' => null,
                 'seo_title' => 'بانک سؤالات استاندارد Python',
