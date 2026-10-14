@@ -4,6 +4,7 @@ use App\Enums\ProductType;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Product;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -32,7 +33,11 @@ class extends Component
 
         $orderNumber = request()->query('order');
 
-        if (! auth()->check() || ! is_string($orderNumber) || $orderNumber === '') {
+        if (
+            ! auth()->check()
+            || ! is_string($orderNumber)
+            || $orderNumber === ''
+        ) {
             return;
         }
 
@@ -69,6 +74,37 @@ class extends Component
         $this->receiptAmount = $payment->amount;
         $this->receiptReference = $payment->gateway_reference;
         $this->receiptPaidAt = $payment->verified_at?->format('Y/m/d H:i');
+    }
+
+    #[Computed]
+    public function hasAccess(): bool
+    {
+        if (! auth()->check()) {
+            return false;
+        }
+
+        return $this->product->accesses()
+            ->active()
+            ->where('user_id', auth()->id())
+            ->exists();
+    }
+
+    #[Computed]
+    public function standardsWithQuestions()
+    {
+        if (! $this->hasAccess) {
+            return collect();
+        }
+
+        return $this->product->standards()
+            ->where('standards.is_active', true)
+            ->with([
+                'field',
+                'chapters.questions' => fn ($query) => $query
+                    ->where('is_active', true)
+                    ->with('options'),
+            ])
+            ->get();
     }
 
     public function render()
