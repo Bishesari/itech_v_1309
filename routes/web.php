@@ -49,6 +49,7 @@ Route::post('/payments/sep/callback', [SepPaymentController::class, 'callback']
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/store.php';
+require __DIR__.'/basic-info.php';
 
 
 

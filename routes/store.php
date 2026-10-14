@@ -1,4 +1,4 @@
 <?php
 
-Route::livewire('/store/written-sample-questions/{product:slug}', 'pages::store.written-sample-questions.show')
-    ->name('store.written-sample-questions.show');
+
+Route::livewire('/basic-info/fields', 'pages::basic-info.field.index')->name('basic-info.field.index');
