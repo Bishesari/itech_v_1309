@@ -16,7 +16,7 @@
         <flux:sidebar.item icon="user-group" :href="route('field.index')" :current="request()->routeIs('field.index')"
                            wire:navigate x-data="{ loading: false }"  @click="loading = true">
             <span>{{ __('رشته های آموزشی') }}</span>
-            <flux:icon.loading x-show="loading" class="inline absolute left-2 size-3.5 text-stone-500"/>
+            <flux:icon.loading x-show="loading" class="inline absolute left-1.5 top-2 size-3.5 text-purple-500"/>
         </flux:sidebar.item>
         <flux:sidebar.item href="#">Android app</flux:sidebar.item>
         <flux:sidebar.item href="#">Brand guidelines</flux:sidebar.item>

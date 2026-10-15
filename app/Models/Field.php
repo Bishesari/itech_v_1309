@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasJalaliDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Field extends Model
 {
+    use HasJalaliDates;
     protected $fillable = ['title', 'slug'];
 
     public function standards(): HasMany
