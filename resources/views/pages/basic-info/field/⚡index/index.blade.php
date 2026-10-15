@@ -71,7 +71,7 @@
                     <flux:table.cell>
 
                         <div class="inline-flex items-center gap-2">
-{{--                            <livewire:pages::filed.edit :$field :key="'field-edit-'.$field->id"/>--}}
+                            <livewire:pages::basic-info.field.update :$field :key="'field-edit-'.$field->id"/>
 {{--                            <livewire:pages::filed.delete :$field :key="'field-delete-'.$field->id"/>--}}
                         </div>
                     </flux:table.cell>
