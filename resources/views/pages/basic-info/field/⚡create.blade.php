@@ -1,18 +1,22 @@
 <?php
 
 use App\Models\Field;
+use App\Rules\PersianName;
+use App\Support\PersianText;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 new class extends Component {
     public string $title = '';
+    public string $slug = '';
 
     public bool $show_btn = true;
 
     protected function rules(): array
     {
         return [
-            'title' => ['required', 'min:2', Rule::unique('fields', 'title')],
+            'title' => ['required', 'min:2', 'max:60', new PersianName, Rule::unique('fields', 'title')],
+            'slug' => ['required', 'min:2', 'max:80', 'alpha_dash:ascii', Rule::unique('fields', 'slug')],
         ];
     }
 
@@ -56,16 +60,31 @@ new class extends Component {
 
             <form wire:submit.prevent="save" class="space-y-4 flex flex-col gap-3" autocomplete="off">
 
-                <flux:input
-                    wire:model="title"
-                    type="text"
-                    inputmode="text"
-                    required
-                    maxlength="50"
-                    input:class="text-center py-6 font-semibold text-base!"
-                    autocomplete="off"
-                    autofocus
-                />
+                <flux:field>
+                    <flux:label badge="فارسی" class="text-xs font-light!">
+                        {{ __('عنوان رشته') }}
+                    </flux:label>
+                    <flux:input wire:model="title" type="text" inputmode="text" required maxlength="60" autofocus
+                                input:class="text-center py-6 font-semibold text-base!"
+                    />
+                    <flux:error
+                        name="title"
+                        class="-mt-1! text-xs font-light!"
+                    />
+                </flux:field>
+                <flux:field>
+                    <flux:label badge="لاتین" class="text-xs font-light!">
+                        {{ __('عنوان اسلاگ') }}
+                    </flux:label>
+                    <flux:input wire:model="slug" type="text" inputmode="text" required maxlength="80"
+                                input:class="text-center py-6 font-semibold text-base!" dir="ltr"
+                    />
+                    <flux:error
+                        name="slug"
+                        class="-mt-1! text-xs font-light!"
+                    />
+                </flux:field>
+
 
                 <div class="flex">
                     <flux:spacer/>

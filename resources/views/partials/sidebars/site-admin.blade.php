@@ -1,4 +1,4 @@
-<flux:badge color="{{$context->role->color}}" class="py-2 mb-1">{{$context->role->name}}</flux:badge>
+<flux:badge color="{{$context->role->color}}" class="py-2 mb-1 ">{{$context->role->name}}</flux:badge>
 
 <flux:sidebar.nav>
 

@@ -18,9 +18,15 @@
                 {{__('#')}}
             </flux:table.column>
             <flux:table.column sortable :sorted="$sortBy === 'title'" :direction="$sortDirection"
-                               wire:click="sort('title')">
+                               wire:click="sort('title')" class="justify-items-center">
                 {{__('عنوان رشته')}}
             </flux:table.column>
+
+            <flux:table.column sortable :sorted="$sortBy === 'slug'" :direction="$sortDirection"
+                               wire:click="sort('title')" dir="ltr" class="justify-items-center">
+                {{__('Slug')}}
+            </flux:table.column>
+
             <flux:table.column>{{__('استانداردها')}}</flux:table.column>
             <flux:table.column sortable :sorted="$sortBy === 'created_at'" :direction="$sortDirection"
                                wire:click="sort('created_at')">
@@ -52,6 +58,7 @@
                 <flux:table.row class=" {{$class}} dark:hover:bg-stone-900/80 transition duration-300 hover:bg-zinc-100" :key="$field->id">
                     <flux:table.cell>{{ $field->id }}</flux:table.cell>
                     <flux:table.cell>{{ $field->title }}</flux:table.cell>
+                    <flux:table.cell dir="ltr">{{ $field->slug }}</flux:table.cell>
                     <flux:table.cell class="text-center">
                         <flux:badge color="green" size="sm"
                                     inset="top bottom">{{ $field->standards_count }}</flux:badge>
