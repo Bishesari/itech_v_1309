@@ -29,13 +29,6 @@ new class extends Component {
         $field = Field::query()->create($this->validate());
         $this->modal('new-field')->close();
         $this->dispatch('field-created', id: $field->id);
-
-        Flux::toast(
-            heading: 'ثبت شد.',
-            text: 'رشته جدید با موفقیت ثبت شد.',
-            variant: 'success',
-            position: 'top right'
-        );
     }
 
     public function reset_prop(): void

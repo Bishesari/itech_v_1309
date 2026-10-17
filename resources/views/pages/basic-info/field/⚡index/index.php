@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Field;
+use Flux\Flux;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
@@ -65,18 +66,36 @@ class extends Component
             ->paginate($this->perPage);
     }
 
-
     #[On('field-created')]
+    public function afterCreate(int $id): void
+    {
+        $this->focusRecord($id);
+
+        Flux::toast(
+            heading: 'ثبت شد.',
+            text: 'رشته جدید با موفقیت ثبت شد.',
+            variant: 'success',
+            position: 'top right',
+        );
+    }
+
     #[On('field-updated')]
-    public function focusRecord(?int $id = null): void
+    public function afterUpdate(int $id): void
+    {
+        $this->focusRecord($id);
+        Flux::toast(
+            heading: 'تغییرات اعمال شد.',
+            text: 'اطلاعات رشته با موفقیت ویرایش شد.',
+            variant: 'warning',
+            position: 'top right',
+        );
+    }
+
+    private function focusRecord(int $id): void
     {
         $this->sortBy = 'title';
         $this->sortDirection = 'asc';
         $this->resetPage();
-
-        if (! $id) {
-            return;
-        }
 
         $field = Field::query()->find($id);
 

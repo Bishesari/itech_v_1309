@@ -92,12 +92,6 @@
             </flux:table.column>
         </flux:table.columns>
 
-        @if ($highlightedId)
-            <div
-                x-data
-                x-init="setTimeout(() => $wire.set('highlightedId', null), 2000)"
-            ></div>
-        @endif
 
         <flux:table.rows>
             @foreach ($this->fields as $field)
@@ -107,11 +101,14 @@
                         : '';
                 @endphp
 
-
-                    <flux:table.row
-                        :key="$field->id"
-                        class="{{ $class }} transition-colors duration-300 hover:bg-zinc-100 dark:hover:bg-stone-900/80"
-                    >
+                <flux:table.row :key="$field->id" x-data="{
+                highlighted: @js($highlightedId === $field->id),
+                init() {
+                if (this.highlighted) {
+                setTimeout(() => this.highlighted = false, 2000)}}}"
+                                x-bind:class="highlighted ? 'bg-green-100/80 dark:bg-green-900/30' : ''"
+                                class="transition-colors duration-300 hover:bg-zinc-100 dark:hover:bg-stone-900/80"
+                >
 
                     <flux:table.cell>
                     <span class="text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
