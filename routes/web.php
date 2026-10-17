@@ -30,7 +30,6 @@ Route::middleware('auth')->group(function () {
         'buyProduct',
     ])->name('products.buy');
 
-
     Route::middleware('role.context')->group(function () {
         Route::get('dashboard', function (CurrentRoleContextService $contextService) {
             $person = request()->user()->person;
@@ -45,11 +44,7 @@ Route::post('/payments/sep/callback', [SepPaymentController::class, 'callback']
 )->name('payments.sep.callback');
 
 
-
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/store.php';
 require __DIR__.'/basic-info.php';
-
-
-

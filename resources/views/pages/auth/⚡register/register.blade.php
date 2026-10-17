@@ -30,52 +30,25 @@
     />
 
     <form wire:submit="continueRegister" class="flex flex-col gap-6" autocomplete="off">
+
         {{-- نام --}}
-        <flux:field>
-            <flux:label badge="فارسی" class="text-xs font-light!">
-                {{ __('نام') }}
-            </flux:label>
-
-            <flux:input
-                wire:model="first_name_fa"
-                type="text"
-                inputmode="text"
-                required
-                autofocus
-                maxlength="30"
-                input:class="text-center py-6 font-semibold text-base!"
-            />
-
-            <flux:error
-                name="first_name_fa"
-                class="-mt-1! text-xs font-light!"
-            />
-        </flux:field>
+        <x-my.flt_lbl
+            name="first_name_fa"
+            label="{{ __('نام') }}"
+            required
+            autofocus
+            :attributes="$attributes->merge(['maxlength' => 30, 'inputmode' => 'text'])"
+            class="text-lg!"
+        />
 
         {{-- نام خانوادگی --}}
-        <flux:field>
-            <flux:label
-                badge="فارسی"
-                class="text-xs font-light!"
-            >
-                {{ __('نام خانوادگی') }}
-            </flux:label>
-
-            <flux:input
-                wire:model="last_name_fa"
-                type="text"
-                inputmode="text"
-                required
-                maxlength="40"
-                input:class="text-center py-6 font-semibold text-base!"
-                autocomplete="off"
-            />
-
-            <flux:error
-                name="last_name_fa"
-                class="-mt-1! text-xs font-light!"
-            />
-        </flux:field>
+        <x-my.flt_lbl
+            name="last_name_fa"
+            label="{{ __('نام خانوادگی') }}"
+            required
+            :attributes="$attributes->merge(['maxlength' => 40, 'inputmode' => 'text'])"
+            class="tracking-widest text-lg!"
+        />
 
         {{-- نوع تابعیت --}}
         <flux:radio.group
@@ -98,53 +71,28 @@
         />
 
         {{-- شناسه --}}
-        <flux:field>
-            <flux:label class="text-xs font-light!">
-                <span x-text="identityLabel"></span>
-            </flux:label>
-
-            <flux:input
-                wire:model="identity"
-                type="text"
-                inputmode="numeric"
-                dir="ltr"
-                required
-                x-bind:maxlength="identityMaxLength"
-                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
-                autocomplete="off"
-            />
-
-            <flux:error
-                name="identity"
-                class="-mt-1! text-xs font-light!"
-            />
-        </flux:field>
+        <x-my.flt_lbl
+            name="identity"
+            alpine-label="identityLabel"
+            type="text"
+            inputmode="numeric"
+            dir="ltr"
+            required
+            x-bind:maxlength="identityMaxLength"
+            autocomplete="off"
+            class="tracking-widest font-semibold text-lg!"
+        />
 
         {{-- موبایل --}}
-        <flux:field>
-            <flux:label
-                badge="کد پیامکی به این شماره ارسال می گردد."
-                class="text-xs font-light!"
-            >
-                {{ __('شماره موبایل') }}
-            </flux:label>
-
-            <flux:input
-                wire:model="mobile"
-                type="text"
-                inputmode="numeric"
-                dir="ltr"
-                maxlength="11"
-                required
-                input:class="text-center pt-6.5 pb-5.5 tracking-widest font-semibold text-lg!"
-                autocomplete="off"
-            />
-
-            <flux:error
-                name="mobile"
-                class="-mt-1! text-xs font-light!"
-            />
-        </flux:field>
+        <x-my.flt_lbl
+            name="mobile"
+            label="{{ __('شماره موبایل') }}"
+            type="text"
+            required
+            dir="ltr"
+            :attributes="$attributes->merge(['maxlength' => 11, 'inputmode' => 'numeric'])"
+            class="tracking-widest font-semibold text-lg!"
+        />
 
         <flux:error
             name="verification"

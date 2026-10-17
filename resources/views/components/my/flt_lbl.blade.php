@@ -1,6 +1,7 @@
 @props([
     'name' => '',
     'label' => '',
+    'alpineLabel' => null,
     'type' => 'text',
     'id' => null,
     'model' => null,
@@ -31,27 +32,28 @@
         @disabled($disabled)
         @required($required)
         @if ($hasError)
-            aria-invalid="true"
-        aria-describedby="{{ $errorId }}"
+            aria-invalid="true" aria-describedby="{{ $errorId }}"
         @endif
         {{ $attributes->merge([
-            'class' => 'peer w-full rounded-lg border-2
-                border-stone-300 dark:border-stone-700
-                bg-transparent
-                px-3 pt-4 pb-2
-                text-center text-stone-700 dark:text-stone-300
-                placeholder-transparent
-                transition-colors duration-200
-                focus:outline-none focus:border-blue-600
-                dark:focus:border-blue-400
-                disabled:cursor-not-allowed
-                disabled:opacity-60',
-        ]) }}
+    'class' => 'peer w-full rounded-lg border-2
+        border-stone-300 dark:border-stone-700
+        bg-transparent
+        px-3 py-3
+        text-center text-stone-700 dark:text-stone-300
+        focus:text-blue-600 dark:focus:text-blue-400
+        placeholder-transparent
+        transition-colors duration-200
+        focus:outline-none focus:border-blue-600
+        dark:focus:border-blue-400
+        disabled:cursor-not-allowed
+        disabled:opacity-60',
+        ])
+         }}
     />
 
     <label
         for="{{ $inputId }}"
-        class="pointer-events-none absolute right-3 top-3
+        class="pointer-events-none absolute right-3 top-3.5
             px-2 text-base text-stone-500
             transition-all duration-150
             peer-focus:-top-2.5 peer-focus:right-2.5
@@ -64,15 +66,21 @@
             peer-[:not(:placeholder-shown)]:bg-white
             dark:peer-[:not(:placeholder-shown)]:bg-zinc-800"
     >
-        {{ $label }}
+        @if ($alpineLabel)
+            <span x-text="{{ $alpineLabel }}"></span>
+        @else
+            {{ $label }}
+        @endif
     </label>
 
     @if ($hasError)
+
         <div
             id="{{ $errorId }}"
-            class="mt-1 text-center text-sm text-red-600 dark:text-red-400"
+            class="mt-1 text-center font-light! text-red-600 dark:text-red-400"
         >
-            {{ $errors->first($name) }}
+            <small>{{ $errors->first($name) }}</small>
+
         </div>
     @endif
 </div>

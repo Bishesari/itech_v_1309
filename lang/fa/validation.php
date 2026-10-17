@@ -198,6 +198,8 @@ return [
     */
 
     'attributes' => [
+        'first_name_fa' => 'نام',
+        'last_name_fa' => 'نام خانوادگی',
         'username' => 'نام کاربری',
         'password' => 'رمز عبور',
     ],
