@@ -11,15 +11,18 @@
     </flux:sidebar.item>
 
     <flux:sidebar.group icon="home" expandable heading="{{__('اطلاعات پایه')}}" class="grid"
-                        :expanded="request()->routeIs(['role.index', 'province.index', 'branch.index', 'field.index', 'standard.index', 'user.index'])"
+                        :expanded="request()->routeIs(['field.index', 'standard.index'])"
     >
         <flux:sidebar.item icon="user-group" :href="route('field.index')" :current="request()->routeIs('field.index')"
                            wire:navigate x-data="{ loading: false }"  @click="loading = true">
             <span>{{ __('رشته های آموزشی') }}</span>
             <flux:icon.loading x-show="loading" class="inline absolute left-1.5 top-2 size-3.5 text-purple-500"/>
         </flux:sidebar.item>
-        <flux:sidebar.item href="#">Android app</flux:sidebar.item>
-        <flux:sidebar.item href="#">Brand guidelines</flux:sidebar.item>
+        <flux:sidebar.item icon="user-group" :href="route('standard.index')" :current="request()->routeIs('standard.index')"
+                           wire:navigate x-data="{ loading: false }"  @click="loading = true">
+            <span>{{ __('استانداردها') }}</span>
+            <flux:icon.loading x-show="loading" class="inline absolute left-1.5 top-2 size-3.5 text-purple-500"/>
+        </flux:sidebar.item>
     </flux:sidebar.group>
 
 

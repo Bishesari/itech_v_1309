@@ -18,12 +18,12 @@ class DatabaseSeeder extends Seeder
         $this->call(CitySeeder::class);
         $this->call(BranchSeeder::class);
 
-        //        $this->call(PersonSeeder::class);
-        //        $this->call(MobileSeeder::class);
-        //        $this->call(MobilePersonSeeder::class);
-        //        $this->call(UserSeeder::class);
-        //        $this->call(RoleSeeder::class);
-        //        $this->call(RoleAssignmentSeeder::class);
+        $this->call(PersonSeeder::class);
+        $this->call(MobileSeeder::class);
+        $this->call(MobilePersonSeeder::class);
+        $this->call(UserSeeder::class);
+        $this->call(RoleSeeder::class);
+        $this->call(RoleAssignmentSeeder::class);
 
         $this->call(FieldSeeder::class);
         $this->call(StandardSeeder::class);
