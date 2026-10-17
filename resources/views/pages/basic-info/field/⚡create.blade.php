@@ -17,6 +17,9 @@ new class extends Component {
         return [
             'title' => ['required', 'min:2', 'max:60', new PersianName, Rule::unique('fields', 'title')],
             'slug' => ['required', 'min:2', 'max:80', 'alpha_dash:ascii', Rule::unique('fields', 'slug')],
+
+            'slug' => ['required', 'min:2', 'max:80', 'regex:/\A[a-zA-Z-]+\z/', Rule::unique('fields', 'slug')],
+
         ];
     }
 
@@ -45,10 +48,19 @@ new class extends Component {
 
 <div>
     @if($show_btn)
-        <flux:tooltip content="رشته جدید" position="left">
-            <flux:icon.plus-circle variant="micro" class="cursor-pointer size-5 text-blue-500 mr-4"
-                                   x-on:click="$flux.modal('new-field').show()"/>
-        </flux:tooltip>
+
+        <flux:button
+            type="button"
+            variant="primary"
+            color="blue"
+            icon="plus"
+            size="sm"
+            class="cursor-pointer"
+            x-on:click="$flux.modal('new-field').show()"
+        >
+            {{ __('رشته جدید') }}
+        </flux:button>
+
     @endif
     <flux:modal name="new-field" :show="$errors->isNotEmpty()" focusable class="md:w-96" @close="reset_prop"
                 :dismissible="false">
@@ -60,30 +72,27 @@ new class extends Component {
 
             <form wire:submit.prevent="save" class="space-y-4 flex flex-col gap-3" autocomplete="off">
 
-                <flux:field>
-                    <flux:label badge="فارسی" class="text-xs font-light!">
-                        {{ __('عنوان رشته') }}
-                    </flux:label>
-                    <flux:input wire:model="title" type="text" inputmode="text" required maxlength="60" autofocus
-                                input:class="text-center py-6 font-semibold text-base!"
-                    />
-                    <flux:error
-                        name="title"
-                        class="-mt-1! text-xs font-light!"
-                    />
-                </flux:field>
-                <flux:field>
-                    <flux:label badge="لاتین" class="text-xs font-light!">
-                        {{ __('عنوان اسلاگ') }}
-                    </flux:label>
-                    <flux:input wire:model="slug" type="text" inputmode="text" required maxlength="80"
-                                input:class="text-center py-6 font-semibold text-base!" dir="ltr"
-                    />
-                    <flux:error
-                        name="slug"
-                        class="-mt-1! text-xs font-light!"
-                    />
-                </flux:field>
+                <x-my.flt_lbl
+                    name="title"
+                    label="عنوان رشته"
+                    type="text"
+                    inputmode="text"
+                    required
+                    maxlength="60"
+                    autofocus
+                    class="py-6 font-semibold text-base!"
+                />
+
+                <x-my.flt_lbl
+                    name="slug"
+                    label="عنوان اسلاگ"
+                    type="text"
+                    inputmode="text"
+                    dir="ltr"
+                    required
+                    maxlength="80"
+                    class="py-6 font-semibold text-base!"
+                />
 
 
                 <div class="flex">

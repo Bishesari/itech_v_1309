@@ -22,49 +22,84 @@ class extends Component
 
     public int $perPage = 10;
 
-    public function sort($column): void
-    {
-        if ($this->sortBy === $column) {
-            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+    private const SORTABLE_COLUMNS = [
+        'id',
+        'title',
+        'slug',
+        'created_at',
+        'updated_at',
+    ];
 
+    public function sort(string $column): void
+    {
+        if (! in_array($column, self::SORTABLE_COLUMNS, true)) {
             return;
         }
-        $this->sortBy = $column;
-        $this->sortDirection = 'asc';
+
+        if ($this->sortBy === $column) {
+            $this->sortDirection = $this->sortDirection === 'asc'
+                ? 'desc'
+                : 'asc';
+        } else {
+            $this->sortBy = $column;
+            $this->sortDirection = 'asc';
+        }
+
+        $this->resetPage();
     }
 
     #[Computed]
     public function fields(): LengthAwarePaginator
     {
+        $sortBy = in_array($this->sortBy, self::SORTABLE_COLUMNS, true)
+            ? $this->sortBy
+            : 'title';
+
+        $sortDirection = in_array($this->sortDirection, ['asc', 'desc'], true)
+            ? $this->sortDirection
+            : 'asc';
+
         return Field::query()
-            ->orderBy($this->sortBy, $this->sortDirection)
+            ->orderBy($sortBy, $sortDirection)
             ->withCount('standards')
             ->paginate($this->perPage);
     }
+
 
     #[On('field-created')]
     #[On('field-updated')]
     public function focusRecord(?int $id = null): void
     {
-        $this->reset(['sortBy', 'sortDirection']);
+        $this->sortBy = 'title';
+        $this->sortDirection = 'asc';
+        $this->resetPage();
 
         if (! $id) {
             return;
         }
 
         $field = Field::query()->find($id);
+
         if (! $field) {
             return;
         }
-        $beforeCount = Field::where('title', '<', $field->title)->count();
-        $page = intdiv($beforeCount, $this->perPage) + 1;
+
+        $position = Field::query()
+            ->where('title', '<', $field->title)
+            ->count();
+
+        $page = intdiv($position, $this->perPage) + 1;
+
         $this->gotoPage($page);
-        $this->highlightedId = $id;
+        $this->highlightedId = $field->id;
     }
+
     #[On('field-deleted')]
     public function afterDelete(): void
     {
-        $fields = $this->fields();
+        unset($this->fields);
+
+        $fields = $this->fields;
 
         if ($fields->isEmpty() && $fields->currentPage() > 1) {
             $this->previousPage();
