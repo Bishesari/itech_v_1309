@@ -28,7 +28,7 @@
                 </flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
-            <livewire:pages::basic-info.field.create />
+            <livewire:pages::basic-info.field.create/>
         </div>
     </div>
 
@@ -55,7 +55,7 @@
                 {{ __('عنوان رشته') }}
             </flux:table.column>
 
-            <flux:table.column
+            <flux:table.column align="center"
                 dir="ltr"
                 sortable
                 :sorted="$sortBy === 'slug'"
@@ -124,7 +124,7 @@
 
                     <flux:table.cell>
                         <div dir="ltr" class="text-left">
-                            <span class="inline-block rounded-md bg-zinc-100 px-2 py-1 font-mono text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            <span class="inline-block rounded-md bg-zinc-100 px-2 py-1 font-mono text-base text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                                 {{ $field->slug }}
                             </span>
                         </div>
@@ -158,7 +158,6 @@
                                 :$field
                                 :key="'field-edit-'.$field->id"
                             />
-
                             @if ($field->standards_count === 0)
                                 <livewire:pages::basic-info.field.delete
                                     :$field

@@ -34,21 +34,18 @@
                 </flux:breadcrumbs.item>
             </flux:breadcrumbs>
 
-            <livewire:pages::basic-info.standard.create />
+                <livewire:pages::basic-info.standard.create />
+
+
         </div>
     </div>
 
     <flux:separator variant="subtle" />
 
-    <flux:table :paginate="$this->standards" class="inline">
+    <flux:table :paginate="$this->standards">
         <flux:table.columns>
-            <flux:table.column
-                sortable
-                :sorted="$sortBy === 'id'"
-                :direction="$sortDirection"
-                wire:click="sort('id')"
-            >
-                {{ __('#') }}
+            <flux:table.column sortable :sorted="$sortBy === 'id'" :direction="$sortDirection" wire:click="sort('id')" align="center">
+                {{__('شناسه')}}
             </flux:table.column>
 
             <flux:table.column>
@@ -64,17 +61,7 @@
                 {{ __('نام فارسی') }}
             </flux:table.column>
 
-            <flux:table.column
-                sortable
-                :sorted="$sortBy === 'name_en'"
-                :direction="$sortDirection"
-                wire:click="sort('name_en')"
-            >
-                {{ __('نام انگلیسی') }}
-            </flux:table.column>
-
-            <flux:table.column
-                dir="ltr"
+            <flux:table.column align="center"
                 sortable
                 :sorted="$sortBy === 'code'"
                 :direction="$sortDirection"
@@ -83,7 +70,7 @@
                 {{ __('کد استاندارد') }}
             </flux:table.column>
 
-            <flux:table.column
+            <flux:table.column align="center"
                 sortable
                 :sorted="$sortBy === 'sum_h'"
                 :direction="$sortDirection"
@@ -92,7 +79,7 @@
                 {{ __('مجموع ساعات') }}
             </flux:table.column>
 
-            <flux:table.column
+            <flux:table.column align="center"
                 sortable
                 :sorted="$sortBy === 'required_h'"
                 :direction="$sortDirection"
@@ -146,12 +133,12 @@
                     class="transition-colors duration-300 hover:bg-zinc-100 dark:hover:bg-stone-900/80"
                 >
                     <flux:table.cell>
-                        <div class="flex items-center gap-1">
+                        <flux:heading class="flex items-center gap-1">
                             <flux:tooltip toggleable position="left">
                                 <flux:button
                                     icon="information-circle"
-                                    size="xs"
-                                    variant="ghost"
+                                    size="sm"
+                                    variant="ghost" color="blue"
                                     class="cursor-pointer"
                                 />
 
@@ -169,46 +156,15 @@
                                     </p>
                                 </flux:tooltip.content>
                             </flux:tooltip>
-
-                            <span class="text-sm tabular-nums text-zinc-500 dark:text-zinc-400">
-                                {{ $standard->id }}
-                            </span>
-                        </div>
+                            <span class="font-mono text-base">{{$standard->id}}</span>
+                        </flux:heading>
                     </flux:table.cell>
 
-                    <flux:table.cell>
-                        <span class="font-medium">
-                            {{ $standard->field->title }}
-                        </span>
-                    </flux:table.cell>
-
-                    <flux:table.cell>
-                        {{ $standard->name_fa }}
-                    </flux:table.cell>
-
-                    <flux:table.cell>
-                        <div dir="ltr" class="text-left">
-                            {{ $standard->name_en }}
-                        </div>
-                    </flux:table.cell>
-
-                    <flux:table.cell>
-                        <div dir="ltr" class="text-left font-mono">
-                            {{ $standard->code }}
-                        </div>
-                    </flux:table.cell>
-
-                    <flux:table.cell>
-                        <span class="tabular-nums">
-                            {{ $standard->sum_h }}
-                        </span>
-                    </flux:table.cell>
-
-                    <flux:table.cell>
-                        <span class="tabular-nums">
-                            {{ $standard->required_h }}
-                        </span>
-                    </flux:table.cell>
+                    <flux:table.cell>{{ $standard->field->title }}</flux:table.cell>
+                    <flux:table.cell>{{ $standard->name_fa }}</flux:table.cell>
+                    <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->code }}</span></flux:table.cell>
+                    <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->sum_h }}</span></flux:table.cell>
+                    <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->required_h }}</span></flux:table.cell>
 
                     <flux:table.cell align="center">
                         <div class="inline-flex items-center gap-2">
@@ -241,7 +197,7 @@
                         </div>
                     </flux:table.cell>
 
-                    <flux:table.cell align="center">
+                    <flux:table.cell align="center" >
                         <div class="inline-flex items-center justify-center gap-2">
                             <flux:tooltip content="{{ __('مدیریت فصل‌ها') }}" position="bottom">
                                 <flux:button
@@ -254,17 +210,9 @@
                                 />
                             </flux:tooltip>
 
-                            <livewire:pages::basic-info.standard.update
-                                :$standard
-                                :key="'standard-edit-'.$standard->id"
-                            />
 
-                            @if ($standard->chapters_count === 0 && $standard->products_count === 0)
-                                <livewire:pages::basic-info.standard.delete
-                                    :$standard
-                                    :key="'standard-delete-'.$standard->id"
-                                />
-                            @endif
+                            <livewire:pages::basic-info.standard.update :$standard :key="'standard-edit-'.$standard->id"/>
+
                         </div>
                     </flux:table.cell>
                 </flux:table.row>

@@ -16,10 +16,7 @@ new class extends Component {
     {
         return [
             'title' => ['required', 'min:2', 'max:60', new PersianName, Rule::unique('fields', 'title')],
-            'slug' => ['required', 'min:2', 'max:80', 'alpha_dash:ascii', Rule::unique('fields', 'slug')],
-
             'slug' => ['required', 'min:2', 'max:80', 'regex:/\A[a-zA-Z-]+\z/', Rule::unique('fields', 'slug')],
-
         ];
     }
 
@@ -73,7 +70,7 @@ new class extends Component {
                     required
                     maxlength="60"
                     autofocus
-                    class="py-6 font-semibold text-base!"
+                    class="font-semibold text-base!"
                 />
 
                 <x-my.flt_lbl
@@ -84,7 +81,7 @@ new class extends Component {
                     dir="ltr"
                     required
                     maxlength="80"
-                    class="py-6 font-semibold text-base!"
+                    class="font-semibold text-base!"
                 />
 
 
