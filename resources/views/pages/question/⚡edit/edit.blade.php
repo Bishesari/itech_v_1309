@@ -235,17 +235,15 @@
             </div>
 
             <div class="mt-4">
-                <flux:field>
-                    <flux:label>زبان کد (اختیاری)</flux:label>
+                <flux:select wire:model="codeLanguage" label="زبان برنامه‌نویسی">
+                    <flux:select.option value="">بدون زبان مشخص</flux:select.option>
 
-                    <flux:input
-                        wire:model="codeLanguage"
-                        placeholder="مثلاً python یا php"
-                        dir="ltr"
-                    />
-
-                    <flux:error name="codeLanguage" />
-                </flux:field>
+                    @foreach ($this->codeLanguages as $language)
+                        <flux:select.option value="{{ $language->value }}">
+                            {{ $language->label() }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
             </div>
 
             <flux:field class="mt-4">

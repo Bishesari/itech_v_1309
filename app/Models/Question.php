@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CodeLanguage;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
 use App\Traits\HasJalaliDates;
@@ -33,6 +34,7 @@ class Question extends Model
             'difficulty' => QuestionDifficulty::class,
             'is_active' => 'boolean',
             'is_frequently_final' => 'boolean',
+            'code_language' => CodeLanguage::class,
         ];
     }
 

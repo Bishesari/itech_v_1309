@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CodeLanguage;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
 use App\Models\Chapter;
@@ -39,13 +40,19 @@ class extends Component
 
     public string $explanation = '';
 
+    #[Computed]
+    public function codeLanguages(): array
+    {
+        return CodeLanguage::cases();
+    }
+
     public string $difficulty = 'medium';
 
     public $questionImage = null;
 
     public string $code = '';
 
-    public string $codeLanguage = '';
+    public ?string $codeLanguage = null;
 
     public bool $isActive = true;
 
@@ -187,7 +194,8 @@ class extends Component
 
             'code' => ['nullable', 'string', 'max:50000'],
 
-            'codeLanguage' => ['nullable', 'string', 'max:30'],
+            'codeLanguage' => ['nullable', Rule::enum(CodeLanguage::class)],
+
 
             'isActive' => ['required', 'boolean'],
 
@@ -241,6 +249,7 @@ class extends Component
 
     public function save()
     {
+        $this->codeLanguage = $this->codeLanguage ?: null;
         $validated = $this->validate();
 
         // تضمین می‌کنیم متن سؤال و توضیحات به‌صورت متن ساده ذخیره شوند.

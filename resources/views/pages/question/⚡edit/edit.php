@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CodeLanguage;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
 use App\Models\Chapter;
@@ -36,6 +37,12 @@ new #[Title('ویرایش سؤال')] class extends Component
 
     public string $text = '';
 
+    #[Computed]
+    public function codeLanguages(): array
+    {
+        return CodeLanguage::cases();
+    }
+
     public bool $removeQuestionImage = false;
     public string $explanation = '';
 
@@ -45,7 +52,7 @@ new #[Title('ویرایش سؤال')] class extends Component
 
     public string $code = '';
 
-    public string $codeLanguage = '';
+    public ?string $codeLanguage = null;
 
     public bool $isActive = true;
 
@@ -213,11 +220,7 @@ new #[Title('ویرایش سؤال')] class extends Component
                 'max:50000',
             ],
 
-            'codeLanguage' => [
-                'nullable',
-                'string',
-                'max:30',
-            ],
+            'codeLanguage' => ['nullable', Rule::enum(CodeLanguage::class)],
 
             'isActive' => [
                 'required',
@@ -288,6 +291,7 @@ new #[Title('ویرایش سؤال')] class extends Component
 
     public function save()
     {
+        $this->codeLanguage = $this->codeLanguage ?: null;
         $validated = $this->validate();
 
         $questionText = trim(strip_tags($validated['text']));
