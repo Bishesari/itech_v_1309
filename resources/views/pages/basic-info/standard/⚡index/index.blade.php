@@ -42,7 +42,7 @@
 
     <flux:separator variant="subtle" />
 
-    <flux:table :paginate="$this->standards">
+    <flux:table :paginate="$this->standards" class="inline">
         <flux:table.columns>
             <flux:table.column sortable :sorted="$sortBy === 'id'" :direction="$sortDirection" wire:click="sort('id')" align="center">
                 {{__('شناسه')}}
@@ -200,13 +200,15 @@
                     <flux:table.cell align="center" >
                         <div class="inline-flex items-center justify-center gap-2">
                             <flux:tooltip content="{{ __('مدیریت فصل‌ها') }}" position="bottom">
+
                                 <flux:button
                                     icon="list-bullet"
                                     size="xs"
                                     variant="subtle"
                                     color="blue"
                                     class="cursor-pointer"
-                                    wire:click="$dispatch('standard-chapters-requested', { id: {{ $standard->id }} })"
+                                    :href="route('chapter.index', $standard)"
+                                    wire:navigate
                                 />
                             </flux:tooltip>
 

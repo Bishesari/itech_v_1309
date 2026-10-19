@@ -4,12 +4,14 @@ namespace App\Models;
 
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
+use App\Traits\HasJalaliDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Question extends Model
 {
+    use HasJalaliDates;
     protected $fillable = [
         'chapter_id',
         'type',
