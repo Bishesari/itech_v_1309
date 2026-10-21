@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use App\Enums\ProductType;
-use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Builder;
+use App\Traits\HasJalaliDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
+    use HasJalaliDates;
+
     protected $fillable = [
         'title',
         'slug',
@@ -20,6 +21,7 @@ class Product extends Model
         'seo_title',
         'seo_description',
         'is_active',
+        'is_publicly_listed',
     ];
 
     protected function casts(): array
@@ -27,6 +29,7 @@ class Product extends Model
         return [
             'type' => ProductType::class,
             'is_active' => 'boolean',
+            'is_publicly_listed' => 'boolean',
         ];
     }
 
@@ -51,19 +54,28 @@ class Product extends Model
         return $this->type === ProductType::WrittenSampleQuestion;
     }
 
-    public function currentPrice(?CarbonInterface $at = null): ?ProductPrice
-    {
+    public function currentPrice(
+        ?\Illuminate\Contracts\Support\CarbonInterface $at = null
+    ): ?ProductPrice {
         $at ??= now();
 
-        /** @var Builder<ProductPrice> $query */
-        $query = $this->prices();
+        if ($this->relationLoaded('prices')) {
+            return $this->prices
+                ->filter(fn (ProductPrice $price) => $price->starts_at->lte($at)
+                    && (
+                        $price->ends_at === null
+                        || $price->ends_at->gt($at)
+                    )
+                )
+                ->sortByDesc('starts_at')
+                ->first();
+        }
 
-        return $query
+        return $this->prices()
             ->where('starts_at', '<=', $at)
-            ->where(function (Builder $query) use ($at) {
-                $query->whereNull('ends_at')
-                    ->orWhere('ends_at', '>', $at);
-            })
+            ->where(fn ($query) => $query->whereNull('ends_at')
+                ->orWhere('ends_at', '>', $at)
+            )
             ->orderByDesc('starts_at')
             ->first();
     }

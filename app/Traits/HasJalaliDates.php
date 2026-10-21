@@ -12,7 +12,9 @@ trait HasJalaliDates
     public function getJalaliDate($field, $format = 'Y/m/d H:i l')
     {
         $date = $this->{$field};
-        if (!$date) return null;
+        if (! $date) {
+            return null;
+        }
         // اطمینان از اینکه تاریخ Carbon است
         $carbon = $date instanceof Carbon ? $date : Carbon::parse($date);
 
@@ -49,6 +51,4 @@ trait HasJalaliDates
     {
         return $this->getJalaliDate('active_until');
     }
-
-
 }
