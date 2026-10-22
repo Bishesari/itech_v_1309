@@ -129,17 +129,11 @@
                 :sorted="$sortBy === 'id'"
                 :direction="$sortDirection"
                 wire:click="sort('id')"
-            >
-                شناسه
-            </flux:table.column>
+            >{{__('شناسه')}}</flux:table.column>
 
-            <flux:table.column>
-                رشته / استاندارد
-            </flux:table.column>
+            <flux:table.column align="center">{{__('استاندارد')}}</flux:table.column>
 
-            <flux:table.column>
-                فصل
-            </flux:table.column>
+            <flux:table.column align="center">{{__('فصل')}}</flux:table.column>
 
             <flux:table.column>
                 متن سؤال
@@ -179,9 +173,7 @@
                 :sorted="$sortBy === 'is_active'"
                 :direction="$sortDirection"
                 wire:click="sort('is_active')"
-            >
-                وضعیت
-            </flux:table.column>
+            >{{__('وضعیت')}}</flux:table.column>
 
             <flux:table.column
                 sortable
@@ -206,34 +198,18 @@
                         </span>
                     </flux:table.cell>
 
-                    <flux:table.cell>
-                        <div class="min-w-36">
-                            <div class="text-sm">
-                                {{ $question->chapter->standard->field->title }}
-                            </div>
+                    <flux:table.cell align="center" >
 
-                            <div class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                {{ $question->chapter->standard->code }}
-                                -
-                                {{ $question->chapter->standard->name_fa }}
-                            </div>
-                        </div>
+                            <div>{{ $question->chapter->standard->name_fa }}</div>
+                            <div class="mt-1 text-xs text-zinc-500">{{__('کد : ')}} <span class="font-mono">{{ $question->chapter->standard->code }}</span></div>
+                            <div class="mt-1 text-xs text-zinc-500">{{__('رشته : ')}}{{ $question->chapter->standard->field->title }}</div>
+
                     </flux:table.cell>
 
-                    <flux:table.cell>
-                        <div class="min-w-32">
-                            <span class="text-xs text-zinc-500">
-                                فصل {{ $question->chapter->number }}
-                            </span>
-
-                            <div class="mt-1">
-                                {{ $question->chapter->title }}
-                            </div>
-                        </div>
-                    </flux:table.cell>
+                    <flux:table.cell>{{ $question->chapter->number }} {{__(' - ')}}  {{ $question->chapter->title }}</flux:table.cell>
 
                     <flux:table.cell>
-                        <div class="max-w-72 whitespace-normal break-words">
+                        <div class="max-w-72 whitespace-normal wrap-break-word">
                             {{ \Illuminate\Support\Str::limit($question->text, 120) }}
                         </div>
 
@@ -258,25 +234,19 @@
                         {{ $question->difficulty?->label() ?? '—' }}
                     </flux:table.cell>
 
-                    <flux:table.cell align="center">
+                    <flux:table.cell>
                         @if ($question->is_frequently_final)
-                            <flux:badge color="green" size="sm">
-                                بله
-                            </flux:badge>
+                            <flux:badge color="green" size="sm">{{__('بله')}}</flux:badge>
                         @else
-                            <span class="text-zinc-400">خیر</span>
+                            <span class="text-zinc-400">{{__('خیر')}}</span>
                         @endif
                     </flux:table.cell>
 
-                    <flux:table.cell align="center">
+                    <flux:table.cell>
                         @if ($question->is_active)
-                            <flux:badge color="green" size="sm">
-                                فعال
-                            </flux:badge>
+                            <flux:badge color="green" size="sm">{{__('فعال')}}</flux:badge>
                         @else
-                            <flux:badge color="zinc" size="sm">
-                                غیرفعال
-                            </flux:badge>
+                            <flux:badge color="zinc" size="sm">{{__('غیر فعال')}}</flux:badge>
                         @endif
                     </flux:table.cell>
 
@@ -285,31 +255,29 @@
                             <x-my.jalali_cell :date="$question->jalali_created_at" />
                         </div>
                     </flux:table.cell>
-
                     <flux:table.cell align="center">
-                        <div class="inline-flex items-center gap-2">
-                            {{-- دکمه‌های ویرایش و حذف را در مرحله بعد اضافه می‌کنیم. --}}
-                            <flux:button
-                                size="xs"
-                                variant="subtle"
-                                icon="eye"
-                                disabled
-                                tooltip="نمایش سؤال"
-                            />
-                            <flux:button
-                                :href="route('question.edit', $question)"
-                                wire:navigate
-                                icon="pencil-square"
-                            >
-                                ویرایش سؤال
-                            </flux:button>
+                        <div class="inline-flex items-center justify-center">
 
-                            <flux:link
-                                :href="route('question.show', $question)"
-                                wire:navigate
-                            >
-                                {{ $question->text }}
-                            </flux:link>
+                            <flux:tooltip content="{{ __('نمایش سؤال') }}" position="bottom">
+                                <flux:button
+                                    icon="eye"
+                                    variant="subtle"
+                                    color="blue"
+                                    :href="route('question.show', $question)"
+                                    wire:navigate
+                                />
+                            </flux:tooltip>
+
+                            <flux:tooltip content="{{ __('ویرایش سؤال') }}" position="bottom">
+                                <flux:button
+                                    icon="pencil-square"
+                                    variant="subtle"
+                                    color="blue"
+                                    :href="route('question.edit', $question)"
+                                    wire:navigate
+                                />
+                            </flux:tooltip>
+
                         </div>
                     </flux:table.cell>
                 </flux:table.row>
