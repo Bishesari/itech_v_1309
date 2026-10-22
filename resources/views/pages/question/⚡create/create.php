@@ -196,7 +196,6 @@ class extends Component
 
             'codeLanguage' => ['nullable', Rule::enum(CodeLanguage::class)],
 
-
             'isActive' => ['required', 'boolean'],
 
             'isFrequentlyFinal' => ['required', 'boolean'],
@@ -263,6 +262,7 @@ class extends Component
         }
 
         $validated['text'] = $questionText;
+
         $validated['explanation'] = $explanation;
 
         $isMultipleChoice = $validated['type']

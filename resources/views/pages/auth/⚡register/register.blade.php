@@ -19,27 +19,19 @@
         }
     }"
 >
-    <x-auth-header
-        :title="__('ثبت نام')"
-        :description="__('اطلاعات خواسته شده را کامل کنید.')"
-    />
+    <x-auth-header :title="__('ثبت نام')" :description="__('اطلاعات خواسته شده را کامل کنید.')"/>
 
     <x-auth-session-status
         class="text-center"
         :status="session('status')"
     />
 
+
     <form wire:submit="continueRegister" class="flex flex-col gap-6" autocomplete="off">
 
         {{-- نام --}}
-        <x-my.flt_lbl
-            name="first_name_fa"
-            label="{{ __('نام') }}"
-            required
-            autofocus
-            :attributes="$attributes->merge(['maxlength' => 30, 'inputmode' => 'text'])"
-            class="text-lg!"
-        />
+        <x-my.flt_lbl name="first_name_fa" label="{{ __('نام') }}" required autofocus
+            :attributes="$attributes->merge(['maxlength' => 30, 'inputmode' => 'text'])" class="text-lg!"/>
 
         {{-- نام خانوادگی --}}
         <x-my.flt_lbl
@@ -51,11 +43,7 @@
         />
 
         {{-- نوع تابعیت --}}
-        <flux:radio.group
-            x-model="nationalityType"
-            variant="cards"
-            class="max-sm:flex-col"
-        >
+        <flux:radio.group x-model="nationalityType" variant="cards" class="max-sm:flex-col">
             @foreach (\App\Enums\NationalityType::cases() as $type)
                 <flux:radio
                     value="{{ $type->value }}"
@@ -64,7 +52,6 @@
                 />
             @endforeach
         </flux:radio.group>
-
         <flux:error
             name="nationality_type"
             class="-mt-5! text-xs font-light!"
@@ -158,7 +145,7 @@
     {{-- OTP VERIFY Modal --}}
     <flux:modal
         name="verify-otp"
-        class="md:w-96"
+        class="md:w-96 bg-amber-100"
         :dismissible="false"
         focusable
     >

@@ -26,7 +26,7 @@ class extends Component
 
     public ?int $highlightedId = null;
 
-    public int $perPage = 10;
+    public int $perPage = 20;
 
     private const SORTABLE_COLUMNS = [
         'id',

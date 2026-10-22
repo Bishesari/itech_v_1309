@@ -58,13 +58,13 @@
             transition-all duration-150
             peer-focus:-top-2.5 peer-focus:right-2.5
             peer-focus:text-sm peer-focus:text-blue-600
-            peer-focus:bg-white dark:peer-focus:bg-zinc-800
+            peer-focus:bg-white dark:peer-focus:bg-stone-900
             dark:peer-focus:text-blue-400
             peer-[:not(:placeholder-shown)]:-top-2.5
             peer-[:not(:placeholder-shown)]:right-2.5
             peer-[:not(:placeholder-shown)]:text-sm
             peer-[:not(:placeholder-shown)]:bg-white
-            dark:peer-[:not(:placeholder-shown)]:bg-zinc-800"
+            dark:peer-[:not(:placeholder-shown)]:bg-stone-900"
     >
         @if ($alpineLabel)
             <span x-text="{{ $alpineLabel }}"></span>
