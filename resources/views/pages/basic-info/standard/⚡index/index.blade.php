@@ -61,6 +61,19 @@
                 {{ __('نام فارسی') }}
             </flux:table.column>
 
+            <flux:table.column align="center">
+                {{ __('فصل‌ها') }}
+            </flux:table.column>
+
+            <flux:table.column align="center">
+                {{ __('سؤالات کتبی') }}
+            </flux:table.column>
+
+            <flux:table.column align="center">
+                {{ __('سؤالات عملی') }}
+            </flux:table.column>
+
+
             <flux:table.column align="center"
                 sortable
                 :sorted="$sortBy === 'code'"
@@ -161,7 +174,17 @@
                     </flux:table.cell>
 
                     <flux:table.cell>{{ $standard->field->title }}</flux:table.cell>
-                    <flux:table.cell>{{ $standard->name_fa }}</flux:table.cell>
+                    <flux:table.cell class="max-w-64 whitespace-normal wrap-break-word">{{ $standard->name_fa }}</flux:table.cell>
+                    <flux:table.cell align="center">
+                        <span class="font-mono text-base">{{ $standard->chapters_count }}</span>
+                    </flux:table.cell>
+                    <flux:table.cell align="center">
+                        <span class="font-mono text-base">{{ $standard->multiple_choice_questions_count }}</span>
+                    </flux:table.cell>
+
+                    <flux:table.cell align="center">
+                        <span class="font-mono text-base">{{ $standard->practical_questions_count }}</span>
+                    </flux:table.cell>
                     <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->code }}</span></flux:table.cell>
                     <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->sum_h }}</span></flux:table.cell>
                     <flux:table.cell align="center" dir="ltr"><span class="font-mono text-base">{{ $standard->required_h }}</span></flux:table.cell>

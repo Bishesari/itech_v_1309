@@ -135,9 +135,7 @@
 
             <flux:table.column align="center">{{__('فصل')}}</flux:table.column>
 
-            <flux:table.column>
-                متن سؤال
-            </flux:table.column>
+            <flux:table.column align="center">{{__('متن سؤال')}}</flux:table.column>
 
             <flux:table.column
                 sortable
@@ -206,12 +204,12 @@
 
                     </flux:table.cell>
 
-                    <flux:table.cell>{{ $question->chapter->number }} {{__(' - ')}}  {{ $question->chapter->title }}</flux:table.cell>
+                    <flux:table.cell class="max-w-44 whitespace-normal wrap-break-word">
+                        {{ $question->chapter->number }} {{__(' - ')}}  {{ $question->chapter->title }}
+                    </flux:table.cell>
 
-                    <flux:table.cell>
-                        <div class="max-w-72 whitespace-normal wrap-break-word">
-                            {{ \Illuminate\Support\Str::limit($question->text, 120) }}
-                        </div>
+                    <flux:table.cell class="max-w-72 whitespace-normal wrap-break-word">
+                        {{ \Illuminate\Support\Str::limit($question->text, 120) }}
 
                         @if ($question->image_path || $question->code)
                             <div class="mt-1 flex gap-2 text-xs text-zinc-500">

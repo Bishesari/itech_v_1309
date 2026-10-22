@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\QuestionType;
 use App\Models\Standard;
 use Flux\Flux;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -65,7 +66,18 @@ class extends Component
 
         return Standard::query()
             ->with('field')
-            ->withCount(['chapters', 'products'])
+            ->withCount([
+                'chapters',
+                'products',
+                'questions as multiple_choice_questions_count' => fn ($query) => $query->where(
+                    'questions.type',
+                    QuestionType::MultipleChoice->value
+                ),
+                'questions as practical_questions_count' => fn ($query) => $query->where(
+                    'questions.type',
+                    QuestionType::Practical->value
+                ),
+            ])
             ->orderBy($sortBy, $sortDirection)
             ->orderBy('id')
             ->paginate($this->perPage);
