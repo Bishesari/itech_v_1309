@@ -52,4 +52,9 @@ class Question extends Model
     {
         return $this->belongsTo(User::class, 'assigned_by');
     }
+
+    public function attemptQuestions(): HasMany
+    {
+        return $this->hasMany(ExamAttemptQuestion::class);
+    }
 }

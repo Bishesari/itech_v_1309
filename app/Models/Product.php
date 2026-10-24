@@ -7,6 +7,8 @@ use App\Traits\HasJalaliDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
 
 class Product extends Model
 {
@@ -78,5 +80,10 @@ class Product extends Model
             )
             ->orderByDesc('starts_at')
             ->first();
+    }
+
+    public function simulatedExam(): HasOne
+    {
+        return $this->hasOne(Exam::class, 'product_id');
     }
 }

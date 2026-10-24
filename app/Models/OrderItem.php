@@ -42,4 +42,8 @@ class OrderItem extends Model
     {
         return $this->hasOne(ProductAccess::class);
     }
+    public function examAttempt(): HasOne
+    {
+        return $this->hasOne(ExamAttempt::class);
+    }
 }
