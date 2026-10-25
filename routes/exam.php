@@ -3,6 +3,8 @@
 Route::middleware('auth')->group(function () {
     Route::livewire('exams', 'pages::exam.index')->name('exam.index');
     Route::livewire('exams/{exam}', 'pages::exam.show')->name('exam.show');
+    // مدیریت آزمون‌ها
+    Route::livewire('basic-info/exams', 'pages::basic-info.exam.index')->name('exam.manage.index');
 });
 
 Route::middleware('auth')->group(function () {
