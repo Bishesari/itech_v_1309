@@ -31,7 +31,8 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             $table->unsignedSmallInteger('question_count');
-            $table->string('selection_mode', 20)->default('random');
+            $table->string('selection_mode', 20)->default('different');
+            $table->json('questions_snapshot')->nullable();
             $table->unsignedSmallInteger('seconds_per_question')
                 ->default(90);
 

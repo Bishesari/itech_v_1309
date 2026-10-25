@@ -35,5 +35,16 @@ class PersonSeeder extends Seeder
             ],
         );
 
+        Person::query()->updateOrCreate(
+            [
+                'identity' => '3501151284',
+            ],
+            [
+                'nationality_type' => NationalityType::Iranian,
+                'first_name_fa' => 'سیده لیلا',
+                'last_name_fa' => 'امامی',
+            ],
+        );
+
     }
 }

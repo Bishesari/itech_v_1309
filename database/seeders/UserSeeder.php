@@ -30,5 +30,15 @@ class UserSeeder extends Seeder
                 'password' => '14611461',
             ],
         );
+
+        User::query()->updateOrCreate(
+            [
+                'username' => 'leila',
+            ],
+            [
+                'person_id' => 3,
+                'password' => '13611361',
+            ],
+        );
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\ExamType;
 use App\Traits\HasJalaliDates;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Exam extends Model
@@ -58,5 +59,10 @@ class Exam extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function chapters(): BelongsToMany
+    {
+        return $this->belongsToMany(Chapter::class);
     }
 }
