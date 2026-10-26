@@ -1,10 +1,7 @@
 <?php
 
 Route::livewire('/store', 'pages::store.index')->name('store.index');
-Route::livewire(
-    'store/written-sample-questions/{product:slug}',
-    'pages::store.written-sample-questions.show'
-)->name('store.written-sample-questions.show');
+Route::livewire('store/written-sample-questions/{product:slug}', 'pages::store.written-sample-questions.show')->name('store.written-sample-questions.show');
 Route::middleware('auth')->group(function () {
     Route::livewire('basic-info/products', 'pages::basic-info.product.index')->name('product.index');
 

@@ -1,13 +1,14 @@
 <?php
 
 use App\Enums\ExamType;
-use App\Enums\QuestionDifficulty;
+use App\Enums\ProductType;
 use App\Enums\QuestionType;
 use App\Models\Exam;
 use App\Models\Question;
 use App\Models\Standard;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
+use App\Models\Product;
 
 new class extends Component
 {
@@ -32,6 +33,8 @@ new class extends Component
     public ?string $ends_at = null;
 
     public string $selection_mode = 'different';
+
+    public ?int $product_id = null;
 
     protected function rules(): array
     {
@@ -123,6 +126,16 @@ new class extends Component
             }
         };
 
+        if ($this->exam_type === ExamType::Simulated->value) {
+            $rules['product_id'] = [
+                'required',
+                'integer',
+                Rule::exists('products', 'id')
+                    ->where('type', ProductType::SimulatedExam->value)
+                    ->where('is_active', true),
+            ];
+        }
+
         return $rules;
     }
 
@@ -133,6 +146,11 @@ new class extends Component
 
     public function updatedExamType(): void
     {
+        if ($this->exam_type !== ExamType::Simulated->value) {
+            $this->product_id = null;
+            $this->resetValidation('product_id');
+        }
+
         if ($this->exam_type === ExamType::Simulated->value) {
             $this->starts_at = null;
             $this->ends_at = null;
@@ -176,6 +194,13 @@ new class extends Component
             'standards' => Standard::query()
                 ->orderBy('name_fa')
                 ->get(),
+
+            'products' => Product::query()
+                ->where('type', ProductType::SimulatedExam->value)
+                ->where('is_active', true)
+                ->orderBy('title')
+                ->get(['id', 'title']),
+
             'chapters' => $this->standard_id
                 ? Standard::find($this->standard_id)
                     ?->chapters()
@@ -186,10 +211,8 @@ new class extends Component
                     ])
                     ->get() ?? collect()
                 : collect(),
-
         ];
     }
-
 
     public function save(): void
     {
@@ -206,6 +229,9 @@ new class extends Component
         DB::transaction(function () use ($validated) {
             $exam = Exam::create([
                 'standard_id' => $validated['standard_id'],
+                'product_id' => $validated['exam_type'] === ExamType::Simulated->value
+                    ? (int) $validated['product_id']
+                    : null,
                 'title' => $validated['title'],
                 'type' => $validated['exam_type'],
                 'description' => $validated['description'] ?: null,
@@ -225,5 +251,4 @@ new class extends Component
 
         $this->dispatch('notify', message: 'آزمون با موفقیت ایجاد شد.');
     }
-
 };

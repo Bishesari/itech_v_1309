@@ -1,84 +1,114 @@
-<div class="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
-    <div>
-        <a
-            href="{{ route('exam.index') }}"
-            class="inline-flex items-center gap-2 text-sm text-zinc-600 transition hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
-        >
-            <flux:icon name="arrow-right" class="size-4" />
-            بازگشت به فهرست آزمون‌ها
-        </a>
+<div class="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
+    <div class="space-y-2">
+        <flux:heading size="xl">
+            {{ $exam->title }}
+        </flux:heading>
+
+        <flux:text>
+            {{ $exam->standard->name_fa ?? $exam->standard->name ?? '' }}
+        </flux:text>
     </div>
 
-    <section class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-8 dark:border-zinc-700 dark:bg-zinc-900">
-        <div class="flex flex-wrap items-start justify-between gap-4">
+    @if ($exam->description)
+        <flux:card>
+            {{ $exam->description }}
+        </flux:card>
+    @endif
+
+    <flux:card class="space-y-4">
+        <div class="flex flex-wrap gap-4">
             <div>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $exam->type->label() }}
-                </p>
-
-                <h1 class="mt-2 text-2xl font-bold text-zinc-900 dark:text-white">
-                    {{ $exam->title }}
-                </h1>
-
-                <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-                    استاندارد:
-                    {{ $exam->standard->name_fa ?? '—' }}
-                </p>
+                <flux:text>تعداد سؤال</flux:text>
+                <flux:heading>{{ $exam->question_count }}</flux:heading>
             </div>
 
-            <span class="rounded-full bg-sky-100 px-3 py-1.5 text-sm font-medium text-sky-800 dark:bg-sky-900 dark:text-sky-200">
-                {{ $exam->question_count }} سؤال
-            </span>
+            <div>
+                <flux:text>مدت آزمون</flux:text>
+                <flux:heading>
+                    {{ intdiv($exam->durationInSeconds(), 60) }} دقیقه
+                </flux:heading>
+            </div>
+
+            <div>
+                <flux:text>حدنصاب قبولی</flux:text>
+                <flux:heading>{{ $exam->pass_percentage }}٪</flux:heading>
+            </div>
         </div>
 
-        @if ($exam->description)
-            <div class="mt-6 border-t border-zinc-200 pt-5 dark:border-zinc-700">
-                <h2 class="font-semibold text-zinc-900 dark:text-white">
-                    درباره آزمون
-                </h2>
+        @if ($exam->type === \App\Enums\ExamType::Simulated)
+            <flux:separator />
 
-                <p class="mt-2 whitespace-pre-line text-sm leading-7 text-zinc-600 dark:text-zinc-300">
-                    {{ $exam->description }}
-                </p>
-            </div>
+            <flux:heading size="lg">انتخاب خرید آزمون</flux:heading>
+
+
+            @if ($orderItems->isEmpty())
+                <flux:callout variant="warning">
+                    <flux:callout.heading>خرید قابل استفاده پیدا نشد</flux:callout.heading>
+                    <flux:callout.text>
+                        برای شروع این آزمون، باید خرید پرداخت‌شده و استفاده‌نشده داشته باشید.
+                    </flux:callout.text>
+                </flux:callout>
+
+                @if ($exam->product_id)
+                    <form
+                        method="POST"
+                        action="{{ route('products.buy', ['product' => $exam->product_id]) }}"
+                    >
+                        @csrf
+
+                        <flux:button
+                            type="submit"
+                            variant="primary"
+                            class="w-full"
+                        >
+                            خرید و شرکت در آزمون
+                        </flux:button>
+                    </form>
+                @endif
+            @else
+
+            <flux:field>
+                    <flux:label>خرید موردنظر</flux:label>
+
+                    <flux:select wire:model="selectedOrderItemId">
+                        <flux:select.option value="">
+                            انتخاب کنید
+                        </flux:select.option>
+
+                        @foreach ($orderItems as $orderItem)
+                            <flux:select.option value="{{ $orderItem->id }}">
+                                سفارش {{ $orderItem->order->order_number ?? $orderItem->order_id }}
+                            </flux:select.option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:error name="selectedOrderItemId" />
+                </flux:field>
+            @endif
         @endif
 
-        <div class="mt-6 grid gap-4 sm:grid-cols-2">
-            <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800">
-                <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                    <flux:icon name="clock" class="size-5" />
-                    مدت آزمون
-                </div>
+        @error('start')
+        <flux:callout variant="danger">
+            {{ $message }}
+        </flux:callout>
+        @enderror
 
-                <p class="mt-2 text-lg font-semibold text-zinc-900 dark:text-white">
-                    {{ intdiv($exam->durationInSeconds(), 60) }} دقیقه
-                </p>
-            </div>
-
-            <div class="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800">
-                <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                    <flux:icon name="check-circle" class="size-5" />
-                    حد نصاب قبولی
-                </div>
-
-                <p class="mt-2 text-lg font-semibold text-zinc-900 dark:text-white">
-                    {{ $exam->pass_percentage !== null ? $exam->pass_percentage . '٪' : 'تعریف نشده' }}
-                </p>
-            </div>
-        </div>
-
-        <div class="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-            پس از شروع آزمون، زمان آن محاسبه می‌شود. شرایط و امکان شروع آزمون در مرحله بعد بررسی خواهد شد.
-        </div>
-
-        <div class="mt-6">
+        @if ($exam->type !== \App\Enums\ExamType::Simulated || $orderItems->isNotEmpty())
             <flux:button
-                href="{{ route('exam.index') }}"
-                variant="ghost"
-                class="w-full sm:w-auto"
+                variant="primary"
+                class="w-full"
+                wire:click="startAttempt"
+                wire:loading.attr="disabled"
+                wire:target="startAttempt"
             >
-                بازگشت
+                <span wire:loading.remove wire:target="startAttempt">
+                    شروع آزمون
+                </span>
+
+                <span wire:loading wire:target="startAttempt">
+                    در حال آماده‌سازی آزمون...
+                </span>
             </flux:button>
-        </div>
-    </section>
+        @endif
+    </flux:card>
 </div>

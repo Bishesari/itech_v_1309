@@ -6,7 +6,7 @@ Route::middleware('auth')->group(function () {
     // مدیریت آزمون‌ها
     Route::livewire('basic-info/exams', 'pages::basic-info.exam.index')->name('exam.manage.index');
     Route::livewire('basic-info/exams/create', 'pages::basic-info.exam.mycreate')->name('exam.create');
-
+    Route::livewire('exams/attempts/{attempt}', 'pages::exam.attempt.show')->name('exam.attempt.show');
 });
 
 Route::middleware('auth')->group(function () {

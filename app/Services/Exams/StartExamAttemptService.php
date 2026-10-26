@@ -72,8 +72,7 @@ class StartExamAttemptService
 
             $this->validateAttemptLimit($exam, $user, $orderItemId);
 
-            $selectedQuestions = $this->selectQuestions($exam, $user);
-
+            $selectedQuestions = $this->selectQuestionsForExam($exam, $user);
             $startedAt = now();
             $duration = $exam->durationInSeconds();
 
@@ -88,45 +87,38 @@ class StartExamAttemptService
                 'duration_seconds' => $duration,
             ]);
 
-            foreach ($selectedQuestions as $index => $question) {
-                $options = $question->options->shuffle()->values();
 
-                $correctCount = $options->where('is_correct', true)->count();
+            if ($exam->selection_mode === 'same') {
+                $attemptQuestions = $selectedQuestions->shuffle()->values();
 
-                if ($options->count() !== 4 || $correctCount !== 1) {
-                    throw ValidationException::withMessages([
-                        'exam' => 'یکی از سؤال‌های انتخاب‌شده چهار گزینه معتبر و دقیقاً یک پاسخ صحیح ندارد.',
+                foreach ($attemptQuestions as $index => $snapshot) {
+                    ExamAttemptQuestion::query()->create([
+                        'exam_attempt_id' => $attempt->id,
+                        'question_id' => $snapshot['question_id'],
+                        'position' => $index + 1,
+                        'question_snapshot' => null,
+                        'options_snapshot' => null,
                     ]);
                 }
+            } else {
+                foreach ($selectedQuestions as $index => $question) {
+                    $snapshot = $this->buildQuestionSnapshot($question);
 
-                $optionSnapshots = $options->map(function ($option) {
-                    return [
-                        'key' => (string) Str::uuid(),
-                        'text' => $option->text,
-                        'image_path' => $option->image_path,
-                        'dir' => $option->dir,
-                        'is_correct' => $option->is_correct,
-                    ];
-                });
-
-                ExamAttemptQuestion::query()->create([
-                    'exam_attempt_id' => $attempt->id,
-                    'question_id' => $question->id,
-                    'position' => $index + 1,
-                    'question_snapshot' => [
-                        'text' => $question->text,
-                        'image_path' => $question->image_path,
-                        'code' => $question->code,
-                        'code_language' => $question->code_language?->value,
-                        'explanation' => $question->explanation,
-                    ],
-                    'options_snapshot' => $optionSnapshots->all(),
-                ]);
+                    ExamAttemptQuestion::query()->create([
+                        'exam_attempt_id' => $attempt->id,
+                        'question_id' => $question->id,
+                        'position' => $index + 1,
+                        'question_snapshot' => $snapshot['question_snapshot'],
+                        'options_snapshot' => $snapshot['options'],
+                    ]);
+                }
             }
+
 
             return $attempt;
         }, attempts: 3);
     }
+
 
     private function validateExamAvailability(Exam $exam): void
     {
@@ -190,6 +182,7 @@ class StartExamAttemptService
                 'exam' => 'خرید این آزمون معتبر نیست یا پرداخت آن تأیید نشده است.',
             ]);
         }
+
     }
 
     private function validateAttemptLimit(
@@ -226,11 +219,46 @@ class StartExamAttemptService
         }
     }
 
-    private function selectQuestions(
+    private function selectQuestionsForExam(
         Exam $exam,
         User $user,
     ): Collection {
-        $baseQuery = Question::query()
+        if ($exam->selection_mode === 'same') {
+            $snapshot = $exam->questions_snapshot;
+
+            if ($snapshot === null) {
+                $questions = $this->selectEligibleQuestions($exam, null);
+
+                $snapshot = $questions->map(
+                    fn (Question $question) => $this->buildQuestionSnapshot($question)
+                )->all();
+
+                $exam->questions_snapshot = $snapshot;
+                $exam->save();
+            }
+
+            if (count($snapshot) !== $exam->question_count) {
+                throw ValidationException::withMessages([
+                    'exam' => 'مجموعه سؤال‌های ثابت آزمون معتبر نیست.',
+                ]);
+            }
+
+            return collect($snapshot);
+        }
+
+        if ($exam->selection_mode === 'different') {
+            return $this->selectEligibleQuestions($exam, $user);
+        }
+
+        throw ValidationException::withMessages([
+            'exam' => 'روش انتخاب سؤال‌های آزمون معتبر نیست.',
+        ]);
+    }
+
+
+    private function selectEligibleQuestions(Exam $exam, ?User $user): Collection
+    {
+        $query = Question::query()
             ->where('is_active', true)
             ->where('type', QuestionType::MultipleChoice->value)
             ->whereHas('chapter', function (Builder $query) use ($exam) {
@@ -238,109 +266,187 @@ class StartExamAttemptService
             })
             ->with('options');
 
-        if (
-            $exam->type === ExamType::Midterm
-            || $exam->type === ExamType::Simulated
-        ) {
-            $baseQuery->where('is_frequently_final', true);
+        if ($exam->type === ExamType::Quiz) {
+            $chapterIds = $exam->chapters()->pluck('chapters.id');
+
+            if ($chapterIds->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'exam' => 'برای آزمون کلاسی فصلی انتخاب نشده است.',
+                ]);
+            }
+
+            $query->whereIn('chapter_id', $chapterIds);
+        } else {
+            $query->where('is_frequently_final', true);
         }
 
-        $usedQuestionIds = Question::query()
-            ->whereHas('attemptQuestions.attempt', function (Builder $query) use (
-                $exam,
-                $user,
-            ) {
-                $query->where('exam_id', $exam->id)
-                    ->where('user_id', $user->id);
-            })
-            ->select('questions.id');
+        $eligibleQuestions = $query->get();
 
-        if ($exam->selection_mode === 'blueprint') {
-            $rules = $exam->blueprintRules()->with('chapter')->get();
+        if ($eligibleQuestions->count() < $exam->question_count) {
+            throw ValidationException::withMessages([
+                'exam' => 'تعداد سؤال‌های واجد شرایط برای این آزمون کافی نیست.',
+            ]);
+        }
 
-            if ($rules->isEmpty()) {
-                throw ValidationException::withMessages([
-                    'exam' => 'طرح انتخاب سؤال‌ها تعریف نشده است.',
-                ]);
-            }
+        $usedQuestionIds = [];
 
-            if ((int) $rules->sum('question_count') !== $exam->question_count) {
-                throw ValidationException::withMessages([
-                    'exam' => 'مجموع تعداد سؤال‌های طرح با تعداد سؤال‌های آزمون برابر نیست.',
-                ]);
-            }
+        if ($user !== null) {
+            $usedQuestionIds = Question::query()
+                ->whereHas('attemptQuestions.attempt', function (Builder $query) use ($exam, $user) {
+                    $query->where('exam_id', $exam->id)
+                        ->where('user_id', $user->id);
+                })
+                ->pluck('questions.id')
+                ->all();
+        }
 
-            $selected = collect();
+        return $this->selectQuestionsProportionally(
+            $eligibleQuestions,
+            (int) $exam->question_count,
+            $usedQuestionIds,
+        );
+    }
 
-            foreach ($rules as $rule) {
-                if (
-                    ! $rule->chapter
-                    || (int) $rule->chapter->standard_id !== (int) $exam->standard_id
-                ) {
-                    throw ValidationException::withMessages([
-                        'exam' => 'یکی از فصل‌های طرح متعلق به استاندارد این آزمون نیست.',
-                    ]);
+    /**
+     * انتخاب متناسب با تعداد سؤال‌های واجد شرایط هر فصل.
+     */
+    private function selectQuestionsProportionally(
+        Collection $questions,
+        int $requiredCount,
+        array $usedQuestionIds = [],
+    ): Collection {
+        $chapters = $questions->groupBy('chapter_id');
+
+        $totalAvailable = $questions->count();
+
+        if ($requiredCount < 1 || $totalAvailable < $requiredCount) {
+            throw ValidationException::withMessages([
+                'exam' => 'تعداد سؤال‌های واجد شرایط برای این آزمون کافی نیست.',
+            ]);
+        }
+
+        $quotas = [];
+        $fractions = [];
+        $assigned = 0;
+
+        foreach ($chapters as $chapterId => $chapterQuestions) {
+            $exactQuota = $requiredCount
+                * $chapterQuestions->count()
+                / $totalAvailable;
+
+            $quota = min(
+                (int) floor($exactQuota),
+                $chapterQuestions->count(),
+            );
+
+            $quotas[$chapterId] = $quota;
+            $fractions[$chapterId] = $exactQuota - floor($exactQuota);
+            $assigned += $quota;
+        }
+
+        // توزیع باقیمانده بر اساس بزرگ‌ترین بخش اعشاری،
+        // بدون عبور از موجودی هیچ فصل.
+        arsort($fractions);
+
+        while ($assigned < $requiredCount) {
+            $progress = false;
+
+            foreach (array_keys($fractions) as $chapterId) {
+                if ($assigned >= $requiredCount) {
+                    break;
                 }
 
-                $query = clone $baseQuery;
+                if ($quotas[$chapterId] >= $chapters[$chapterId]->count()) {
+                    continue;
+                }
 
-                $query->where('chapter_id', $rule->chapter_id)
-                    ->where('difficulty', $rule->difficulty->value);
-
-                $selected = $selected->concat(
-                    $this->pickQuestions(
-                        $query,
-                        (int) $rule->question_count,
-                        $usedQuestionIds,
-                    )->all()
-                );
+                $quotas[$chapterId]++;
+                $assigned++;
+                $progress = true;
             }
-        } elseif ($exam->selection_mode === 'random') {
-            $selected = $this->pickQuestions(
-                clone $baseQuery,
-                $exam->question_count,
-                $usedQuestionIds,
-            );
-        } else {
+
+            if (! $progress) {
+                throw ValidationException::withMessages([
+                    'exam' => 'توزیع سؤال‌ها بین فصل‌ها امکان‌پذیر نیست.',
+                ]);
+            }
+        }
+
+        $selected = collect();
+
+        foreach ($chapters as $chapterId => $chapterQuestions) {
+            $quota = $quotas[$chapterId];
+
+            if ($quota === 0) {
+                continue;
+            }
+
+            $unused = $chapterQuestions
+                ->reject(fn (Question $question) => in_array(
+                    $question->id,
+                    $usedQuestionIds,
+                ))
+                ->shuffle();
+
+            $chapterSelected = $unused->take($quota);
+
+            if ($chapterSelected->count() < $quota) {
+                $remaining = $quota - $chapterSelected->count();
+
+                $used = $chapterQuestions
+                    ->filter(fn (Question $question) => in_array(
+                        $question->id,
+                        $usedQuestionIds,
+                    ))
+                    ->shuffle()
+                    ->take($remaining);
+
+                $chapterSelected = $chapterSelected->concat($used);
+            }
+
+            $selected = $selected->concat($chapterSelected);
+        }
+
+        if ($selected->count() !== $requiredCount) {
             throw ValidationException::withMessages([
-                'exam' => 'روش انتخاب سؤال‌های آزمون معتبر نیست.',
+                'exam' => 'تعداد سؤال‌های انتخاب‌شده با تعداد درخواستی برابر نیست.',
             ]);
         }
 
-        if ($selected->count() !== $exam->question_count) {
+        return $selected->shuffle()->values();
+    }
+
+
+    private function buildQuestionSnapshot(Question $question): array
+    {
+        $options = $question->options->shuffle()->values();
+
+        if (
+            $options->count() !== 4
+            || $options->where('is_correct', true)->count() !== 1
+        ) {
             throw ValidationException::withMessages([
-                'exam' => 'تعداد سؤال‌های واجد شرایط برای برگزاری این آزمون کافی نیست.',
+                'exam' => 'یکی از سؤال‌های انتخاب‌شده چهار گزینه معتبر و دقیقاً یک پاسخ صحیح ندارد.',
             ]);
         }
 
-        return $selected->values();
+        return [
+            'question_id' => $question->id,
+            'question_snapshot' => [
+                'text' => $question->text,
+                'image_path' => $question->image_path,
+                'code' => $question->code,
+                'code_language' => $question->code_language?->value,
+                'explanation' => $question->explanation,
+            ],
+            'options' => $options->map(fn ($option) => [
+                'key' => (string) Str::uuid(),
+                'text' => $option->text,
+                'image_path' => $option->image_path,
+                'dir' => $option->dir,
+                'is_correct' => $option->is_correct,
+            ])->all(),
+        ];
     }
 
-    private function pickQuestions(
-        Builder $query,
-        int $count,
-        Builder $usedQuestionIds,
-    ): Collection {
-        // ابتدا سؤال‌هایی را انتخاب می‌کنیم که کاربر در نوبت‌های قبلی
-        // همین آزمون ندیده است.
-        $unused = (clone $query)
-            ->whereNotIn('questions.id', $usedQuestionIds)
-            ->get()
-            ->shuffle();
-
-        if ($unused->count() >= $count) {
-            return $unused->take($count)->values();
-        }
-
-        // اگر سؤال جدید کافی نبود، از سؤال‌های قبلی هم استفاده می‌کنیم.
-        $used = $query
-            ->whereIn('questions.id', $usedQuestionIds)
-            ->get()
-            ->shuffle();
-
-        return $unused
-            ->concat($used->all())
-            ->take($count)
-            ->values();
-    }
 }

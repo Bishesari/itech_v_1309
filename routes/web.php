@@ -25,10 +25,7 @@ Route::middleware('auth')->group(function () {
         'payOrder',
     ])->name('orders.pay');
 
-    Route::post('/products/{product}/buy', [
-        SepPaymentController::class,
-        'buyProduct',
-    ])->name('products.buy');
+    Route::post('/products/{product}/buy', [SepPaymentController::class, 'buyProduct'])->name('products.buy');
 
     Route::middleware('role.context')->group(function () {
         Route::get('dashboard', function (CurrentRoleContextService $contextService) {
@@ -42,7 +39,6 @@ Route::middleware('auth')->group(function () {
 // این مسیر باید از سمت درگاه قابل دسترسی باشد.
 Route::post('/payments/sep/callback', [SepPaymentController::class, 'callback']
 )->name('payments.sep.callback');
-
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

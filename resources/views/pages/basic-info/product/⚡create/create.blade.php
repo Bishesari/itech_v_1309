@@ -75,31 +75,23 @@
                 required
             />
 
+
             <flux:field>
                 <flux:label>نوع محصول</flux:label>
 
                 <flux:select wire:model.live="type" required>
-                    <flux:select.option value="written_sample_question">
-                        نمونه سؤالات کتبی
-                    </flux:select.option>
-
-                    <flux:select.option value="exam_registration">
-                        ثبت‌نام آزمون
-                    </flux:select.option>
-
-                    <flux:select.option value="software_service">
-                        خدمات نرم‌افزاری
-                    </flux:select.option>
-
-                    <flux:select.option value="course_tuition">
-                        شهریه دوره
-                    </flux:select.option>
+                    @foreach (\App\Enums\ProductType::cases() as $productType)
+                        <flux:select.option value="{{ $productType->value }}">
+                            {{ $productType->label() }}
+                        </flux:select.option>
+                    @endforeach
                 </flux:select>
 
                 <flux:error name="type" />
             </flux:field>
 
-            @if ($type === \App\Enums\ProductType::WrittenSampleQuestion->value)
+
+        @if ($type === \App\Enums\ProductType::WrittenSampleQuestion->value)
                 <flux:field>
                     <flux:label>استاندارد مربوطه</flux:label>
 

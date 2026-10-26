@@ -35,6 +35,7 @@ class Exam extends Model
             'type' => ExamType::class,
             'question_count' => 'integer',
             'seconds_per_question' => 'integer',
+            'questions_snapshot' => 'array',
             'pass_percentage' => 'integer',
             'max_attempts' => 'integer',
             'starts_at' => 'datetime',
@@ -52,10 +53,12 @@ class Exam extends Model
     {
         return $this->question_count * $this->seconds_per_question;
     }
+
     public function blueprintRules(): HasMany
     {
         return $this->hasMany(ExamBlueprintRule::class);
     }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -64,5 +67,10 @@ class Exam extends Model
     public function chapters(): BelongsToMany
     {
         return $this->belongsToMany(Chapter::class);
+    }
+
+    public function attempts(): HasMany
+    {
+        return $this->hasMany(ExamAttempt::class);
     }
 }

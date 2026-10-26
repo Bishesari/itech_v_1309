@@ -42,11 +42,6 @@ class extends Component
 
     public function productTypeLabel(ProductType $type): string
     {
-        return match ($type) {
-            ProductType::WrittenSampleQuestion => 'نمونه سؤالات کتبی',
-            ProductType::ExamRegistration => 'ثبت‌نام آزمون',
-            ProductType::SoftwareService => 'خدمات نرم‌افزاری',
-            ProductType::CourseTuition => 'شهریه دوره',
-        };
+        return $type->label();
     }
 };

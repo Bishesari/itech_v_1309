@@ -12,20 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chapter_exam', function (Blueprint $table) {
+            $table->id();
+
             $table->foreignId('chapter_id')
                 ->constrained()
                 ->restrictOnDelete();
 
-            $table->id();
+
             $table->foreignId('exam_id')
                 ->constrained()
                 ->cascadeOnDelete();
 
 
-
             $table->timestamps();
 
-            $table->primary(['chapter_id', 'exam_id']);
+            $table->unique(['chapter_id', 'exam_id']);
         });
     }
 

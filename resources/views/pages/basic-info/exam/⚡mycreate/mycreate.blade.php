@@ -14,6 +14,33 @@
         @endforeach
     </flux:select>
 
+    @if ($exam_type === \App\Enums\ExamType::Simulated->value)
+        <flux:select
+            wire:model="product_id"
+            variant="listbox"
+            placeholder="محصول آزمون را انتخاب کنید ..."
+            label="محصول قابل فروش"
+            searchable
+        >
+            @foreach ($products as $product)
+                <flux:select.option value="{{ $product->id }}">
+                    {{ $product->title }}
+                </flux:select.option>
+            @endforeach
+        </flux:select>
+
+        <flux:error name="product_id" />
+
+        @if ($products->isEmpty())
+            <flux:callout variant="warning">
+                <flux:callout.heading>محصولی موجود نیست</flux:callout.heading>
+                <flux:callout.text>
+                    ابتدا یک محصول فعال با نوع «آزمون شبیه‌سازی» و قیمت معتبر ایجاد کنید.
+                </flux:callout.text>
+            </flux:callout>
+        @endif
+    @endif
+
     <flux:field>
         <flux:label>روش ارائه سؤال‌ها</flux:label>
 
